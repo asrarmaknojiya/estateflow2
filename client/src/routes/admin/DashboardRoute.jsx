@@ -13,6 +13,7 @@ import AddCategory from "../../pages/admin/category/AddCategory";
 import CreateCoupon from "../../pages/admin/coupon/CreateCoupon";
 import AddNewAdmin from "../../pages/admin/manage_admin/AddNewAdmin";
 import AddNewCustomer from "../../pages/admin/customers/AddNewCustomer";
+import EditAdmin from "../../pages/admin/manage_admin/UpdateAdmin";
 import Properties from "../../pages/admin/properties/Properties";
 import AddProperty from "../../pages/admin/properties/AddProperties";
 import EditProperty from "../../pages/admin/properties/UpdateProperties";
@@ -44,6 +45,8 @@ const DashboardRoute = () => {
         <Route path="/admin/add-category" element={<AddCategory />} />
         <Route path="/admin/create-coupon" element={<CreateCoupon />} />
         <Route path="/admin/add-new_admin" element={<AddNewAdmin />} />
+        <Route path="/admin/edit-admin" element={<EditAdmin />} />
+
         <Route path="/admin/add-new_customer" element={<AddNewCustomer />} />
         <Route
           path="/logout"

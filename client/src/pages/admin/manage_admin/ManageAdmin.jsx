@@ -1,20 +1,98 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  HiOutlinePlus,
   HiOutlineArrowLeft,
   HiOutlineArrowRight,
 } from "react-icons/hi";
-import { IoMdArrowDropright, IoIosEye } from "react-icons/io";
-import AdminProfile from "../../../assets/image/dash-profile.png";
+import { IoIosEye } from "react-icons/io";
 import { MdDeleteForever } from "react-icons/md";
 import { IoPencil } from "react-icons/io5";
+
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
+import AdminProfile from "../../../assets/image/dash-profile.png";
+
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:4500";
+const PAGE_SIZE = 10;
 
 const ManageAdmin = () => {
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const navigate = useNavigate();
+
+  /* ===================== FETCH ALL USERS ===================== */
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`${API_BASE_URL}/users`);
+        setAdmins(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch admins:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdmins();
+  }, []);
+
+  /* ===================== DELETE USER ===================== */
+  const handleDelete = async (id) => {
+    const allow = window.confirm("Are you sure you want to delete this admin?");
+    if (!allow) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/users/${id}`);
+      setAdmins((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      console.error("Failed to delete admin:", err);
+    }
+  };
+
+  const handleEdit = (admin) => {
+    navigate("/admin/edit-admin", { state: { admin } });
+  };
+
+  /* ===================== FILTER BY TABS ===================== */
+  const filteredAdmins = admins.filter((admin) => {
+    if (activeTab === "All") return true;
+    if (activeTab === "Active") return admin.status === "active";
+    if (activeTab === "Blocked")
+      return admin.status === "block" || admin.status === "blocked";
+    return true;
+  });
+
+  /* ===================== PAGINATION ===================== */
+  const totalPages = Math.max(1, Math.ceil(filteredAdmins.length / PAGE_SIZE));
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+
+  const paginatedAdmins = filteredAdmins.slice(
+    startIndex,
+    startIndex + PAGE_SIZE
+  );
+
+  const changePage = (p) => {
+    if (p >= 1 && p <= totalPages) setCurrentPage(p);
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (isNaN(d)) return "-";
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   return (
     <>
       <Sidebar />
@@ -25,297 +103,113 @@ const ManageAdmin = () => {
           breadcrumbText="Admin List"
           button={{ link: "/admin/add-new_admin", text: "Add New Admin" }}
         />
+
+        {/* TABS */}
         <div className="admin-panel-header-tabs">
-          <button
-            className={`admin-panel-header-tab 
-                     ${activeTab === "All" ? "active" : ""}`}
-            onClick={() => setActiveTab("All")}
-          >
-            All
-          </button>
-          <button
-            className={`admin-panel-header-tab 
-                     ${activeTab === "Active" ? "active" : ""}`}
-            onClick={() => setActiveTab("Active")}
-          >
-            Active
-          </button>
-          <button
-            className={`admin-panel-header-tab 
-                     ${activeTab === "Blocked" ? "active" : ""}`}
-            onClick={() => setActiveTab("Blocked")}
-          >
-            Blocked
-          </button>
+          {["All", "Active", "Blocked"].map((tab) => (
+            <button
+              key={tab}
+              className={`admin-panel-header-tab ${
+                activeTab === tab ? "active" : ""
+              }`}
+              onClick={() => {
+                setActiveTab(tab);
+                setCurrentPage(1);
+              }}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
+        {/* TABLE */}
         <div className="dashboard-table-container">
-          <table>
-            <thead>
-              <tr>
-                <th style={{ width: "25%" }}>Name</th>
-                <th style={{ width: "16%" }}>Email</th>
-                <th style={{ width: "15%" }}>Phone No</th>
-                <th style={{ width: "11%" }}>DOB</th>
-                <th style={{ width: "10%" }}>Status</th>
-                <th style={{ width: "11%" }}>Added</th>
-                <th style={{ width: "12%" }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="product-info admin-profile">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status out-of-stock">Blocked</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status out-of-stock">Blocked</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status out-of-stock">Blocked</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>24 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-              <tr>
-                <td className="product-info">
-                  <img src={AdminProfile} alt="profile_image" />
-                  <span>John Doe</span>
-                </td>
-                <td>johndoe@gmail.com</td>
-                <td>+917034983827</td>
-                <td>24 Aug 1998</td>
-                <td>
-                  <span className="status published">Active</span>
-                </td>
-                <td>28 Jun 2023</td>
-                <td className="actions">
-                  <IoPencil />
-                  <IoIosEye />
-                  <MdDeleteForever />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {loading ? (
+            <p>Loading users...</p>
+          ) : (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Added</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-          <div className="table-footer-pagination">
-            <span>Showing 1-10 from 100</span>
-            <ul className="pagination">
-              <li className="arrow">
-                <HiOutlineArrowLeft />
-              </li>
-              <li className="">01</li>
-              <li>02</li>
-              <li>03</li>
-              <li>04</li>
-              <li>05</li>
-              <li className="arrow">
-                <HiOutlineArrowRight />
-              </li>
-            </ul>
-          </div>
+                <tbody>
+                  {paginatedAdmins.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: "center" }}>
+                        No admins found
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedAdmins.map((user) => (
+                      <tr key={user.id}>
+                        <td className="product-info admin-profile">
+                          <img src={AdminProfile} alt="profile" />
+                          <span>{user.name || "-"}</span>
+                        </td>
+                        <td>{user.email || "-"}</td>
+                        <td>{user.number || "-"}</td>
+                        <td>
+                          <span
+                            className={
+                              user.status === "active"
+                                ? "status published"
+                                : "status out-of-stock"
+                            }
+                          >
+                            {user.status}
+                          </span>
+                        </td>
+                        <td>{formatDate(user.created_at)}</td>
+
+                        <td className="actions">
+                          <IoPencil onClick={() => handleEdit(user)} />
+                          <IoIosEye />
+                          <MdDeleteForever onClick={() => handleDelete(user.id)} />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+
+              {/* PAGINATION */}
+              <div className="table-footer-pagination">
+                <span>
+                  Showing {filteredAdmins.length === 0 ? 0 : startIndex + 1}-
+                  {Math.min(startIndex + PAGE_SIZE, filteredAdmins.length)} from{" "}
+                  {filteredAdmins.length}
+                </span>
+
+                <ul className="pagination">
+                  <li className="arrow" onClick={() => changePage(currentPage - 1)}>
+                    <HiOutlineArrowLeft />
+                  </li>
+
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <li
+                      key={i}
+                      className={currentPage === i + 1 ? "active" : ""}
+                      onClick={() => changePage(i + 1)}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </li>
+                  ))}
+
+                  <li className="arrow" onClick={() => changePage(currentPage + 1)}>
+                    <HiOutlineArrowRight />
+                  </li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
       </main>
     </>

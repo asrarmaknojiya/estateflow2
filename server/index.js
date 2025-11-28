@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const bodyparser = require("body-parser");
 const dotenv = require("dotenv");
+const users=require("./routes/users/user");
+const role=require("./routes/users/role");
 const properties = require("./routes/properties/properties"); // adjust path
 
 dotenv.config();
@@ -22,6 +24,9 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyparser.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/',users);
+app.use('/',role);
+
 
 // mount auth routes at /auth
 app.use('/', authRoutes);

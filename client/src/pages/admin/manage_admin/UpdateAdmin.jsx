@@ -1,53 +1,99 @@
 import React, { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import { MdSave } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
-import { IoMdArrowDropright } from "react-icons/io";
-import { Link, NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:4500";
 
-const AddNewAdmin = () => {
+const EditAdmin = () => {
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const admin = state?.admin;
 
-  // exactly same as DB / backend
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [number, setNumber] = useState("");
-  const [altNumber, setAltNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [status, setStatus] = useState("active");
-  const [password, setPassword] = useState("");
   const [profileFile, setProfileFile] = useState(null);
 
-  const [roles, setRoles] = useState([]);
-  const [selectedRoleIds, setSelectedRoleIds] = useState([]);
+  const [password, setPassword] = useState(""); // new password (optional)
+
+  const [roles, setRoles] = useState([]); // all roles except admin
+  const [selectedRoleIds, setSelectedRoleIds] = useState([]); // role ids checked
+  const [existingUserRoles, setExistingUserRoles] = useState([]); // mappings from DB
+
   const [submitting, setSubmitting] = useState(false);
 
-  // fetch roles (simple, no token)
+  // load initial data + fetch roles + user roles
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/roles`);
-        const allRoles = Array.isArray(res.data) ? res.data : [];
+    if (!admin) {
+      navigate("/admin/manage-admins");
+      return;
+    }
 
-        // "admin" role UI se hide rakhenge
+    setName(admin.name || "");
+    setEmail(admin.email || "");
+    setPhoneNumber(admin.number || "");
+    setStatus(admin.status || "active");
+
+    const fetchRolesAndUserRoles = async () => {
+      try {
+        // 1) all roles
+        const rolesRes = await axios.get(`${API_BASE_URL}/roles`);
+        const allRoles = Array.isArray(rolesRes.data) ? rolesRes.data : [];
+
+        // hide "admin" role from UI
         const visibleRoles = allRoles.filter(
           (r) => r.name?.toLowerCase() !== "admin"
         );
-
         setRoles(visibleRoles);
+
+        // 2) current roles from users_roles table
+        let selectedIds = [];
+        let userRoles = [];
+
+        try {
+          const userRolesRes = await axios.get(
+            `${API_BASE_URL}/user-roles/${admin.id}`
+          );
+          userRoles = Array.isArray(userRolesRes.data)
+            ? userRolesRes.data
+            : [];
+        } catch (err) {
+          console.error("Failed to fetch user roles:", err);
+        }
+
+        setExistingUserRoles(userRoles);
+
+        if (userRoles.length > 0) {
+          // use role_id from users_roles
+          selectedIds = userRoles.map((ur) => ur.role_id);
+        } else if (admin.roles) {
+          // fallback: roles string from /users (e.g. "seller,buyer")
+          const roleNames = admin.roles
+            .split(",")
+            .map((r) => r.trim().toLowerCase())
+            .filter(Boolean);
+
+          selectedIds = visibleRoles
+            .filter((r) => roleNames.includes(r.name.toLowerCase()))
+            .map((r) => r.id);
+        }
+
+        setSelectedRoleIds(selectedIds);
       } catch (err) {
-        console.error("Failed to fetch roles:", err);
+        console.error("Failed to fetch roles / user roles for edit:", err);
       }
     };
 
-    fetchRoles();
-  }, []);
+    fetchRolesAndUserRoles();
+  }, [admin, navigate]);
 
   const handleButtonClick = () => {
-    document.getElementById("imageInputFile").click();
+    document.getElementById("editImageInputFile").click();
   };
 
   const handleRoleToggle = (roleId) => {
@@ -60,7 +106,7 @@ const AddNewAdmin = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (submitting) return;
+    if (!admin || submitting) return;
 
     if (!name) {
       alert("Please enter name");
@@ -70,12 +116,8 @@ const AddNewAdmin = () => {
       alert("Please enter email");
       return;
     }
-    if (!number) {
+    if (!phoneNumber) {
       alert("Please enter phone number");
-      return;
-    }
-    if (!password) {
-      alert("Please enter password");
       return;
     }
     if (selectedRoleIds.length === 0) {
@@ -86,38 +128,52 @@ const AddNewAdmin = () => {
     try {
       setSubmitting(true);
 
-      // 1) create user – exactly same fields as backend
+      // 1) update user data
       const formData = new FormData();
       formData.append("name", name);
       formData.append("email", email);
-      formData.append("number", number);
-      if (altNumber) formData.append("alt_number", altNumber);
-      formData.append("password", password);
+      formData.append("number", phoneNumber);
       formData.append("status", status);
-      if (profileFile) formData.append("img", profileFile);
 
-      const userRes = await axios.post(`${API_BASE_URL}/users`, formData);
-      const userId = userRes.data?.insertId;
+      if (password && password.trim() !== "") {
+        formData.append("password", password);
+      }
 
-      // 2) assign roles
-      if (userId) {
+      if (profileFile) {
+        formData.append("img", profileFile);
+      }
+
+      await axios.put(`${API_BASE_URL}/users/${admin.id}`, formData);
+
+      // 2) update roles:
+      // delete old users_roles mappings (only if they exist)
+      if (existingUserRoles.length > 0) {
         await Promise.all(
-          selectedRoleIds.map((roleId) =>
-            axios.post(`${API_BASE_URL}/user-roles`, {
-              user_id: userId,
-              role_id: roleId,
-            })
+          existingUserRoles.map((ur) =>
+            axios.delete(`${API_BASE_URL}/user-roles/${ur.id}`)
           )
         );
       }
 
+      // add new mappings
+      await Promise.all(
+        selectedRoleIds.map((roleId) =>
+          axios.post(`${API_BASE_URL}/user-roles`, {
+            user_id: admin.id,
+            role_id: roleId,
+          })
+        )
+      );
+
       navigate("/admin/manage-admins");
     } catch (err) {
-      console.error("Failed to save admin:", err);
+      console.error("Failed to update admin:", err);
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (!admin) return null;
 
   return (
     <>
@@ -129,17 +185,15 @@ const AddNewAdmin = () => {
           style={{ marginBottom: "24px" }}
         >
           <div>
-            <h5>Add Admin</h5>
+            <h5>Edit Admin</h5>
             <div className="admin-panel-breadcrumb">
               <Link to="/admin/dashboard" className="breadcrumb-link active">
                 Dashboard
               </Link>
-              <IoMdArrowDropright />
               <Link to="/admin/manage-admins" className="breadcrumb-link active">
                 Admin List
               </Link>
-              <IoMdArrowDropright />
-              <span className="breadcrumb-text">Add Admin</span>
+              <span className="breadcrumb-text">Edit Admin</span>
             </div>
           </div>
           <div className="admin-panel-header-add-buttons">
@@ -154,7 +208,7 @@ const AddNewAdmin = () => {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              <MdSave /> {submitting ? "Saving..." : "Save Admin"}
+              <MdSave /> {submitting ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </div>
@@ -167,7 +221,7 @@ const AddNewAdmin = () => {
               <div className="add-product-form-container">
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label htmlFor="name">Name</label>
+                    <label htmlFor="name">Full Name</label>
                     <input
                       type="text"
                       id="name"
@@ -176,48 +230,39 @@ const AddNewAdmin = () => {
                       onChange={(e) => setName(e.target.value)}
                     />
                   </div>
+
                   <div>
-                    <label htmlFor="email">Email</label>
+                    <label htmlFor="edit-email">Email</label>
                     <input
                       type="text"
-                      id="email"
+                      id="edit-email"
                       placeholder="Type your email here..."
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
-                </div>
-
-                <div className="coupon-code-input-profile">
                   <div>
-                    <label htmlFor="phone-number">Phone Number</label>
+                    <label htmlFor="edit-phone-number">Phone Number</label>
                     <input
                       type="text"
-                      id="phone-number"
+                      id="edit-phone-number"
                       placeholder="Type your phone number here..."
-                      value={number}
-                      onChange={(e) => setNumber(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="alt-phone-number">Alt Phone Number</label>
-                    <input
-                      type="text"
-                      id="alt-phone-number"
-                      placeholder="Type your alternate phone number here..."
-                      value={altNumber}
-                      onChange={(e) => setAltNumber(e.target.value)}
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </div>
                 </div>
 
+                {/* Password (optional, not pre-filled) */}
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label htmlFor="password">Password</label>
+                    <label htmlFor="edit-password">
+                      New Password (optional)
+                    </label>
                     <input
                       type="password"
-                      id="password"
-                      placeholder="Type password here..."
+                      id="edit-password"
+                      placeholder="Enter new password to change"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -233,7 +278,7 @@ const AddNewAdmin = () => {
             <div className="dashboard-add-content-card">
               <h6>Profile</h6>
               <div className="add-product-form-container">
-                <label htmlFor="photo">Photo</label>
+                <label htmlFor="edit-photo">Photo</label>
                 <div className="add-product-upload-container">
                   <div className="add-product-upload-icon">
                     <img
@@ -253,7 +298,7 @@ const AddNewAdmin = () => {
                   </button>
                   <input
                     type="file"
-                    id="imageInputFile"
+                    id="editImageInputFile"
                     name="img"
                     style={{ display: "none" }}
                     accept="image/*"
@@ -271,9 +316,9 @@ const AddNewAdmin = () => {
             <div className="dashboard-add-content-card">
               <h6>Status</h6>
               <div className="add-product-form-container">
-                <label htmlFor="admin-status">Admin Status</label>
+                <label htmlFor="edit-admin-status">Admin Status</label>
                 <select
-                  id="admin-status"
+                  id="edit-admin-status"
                   name="status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
@@ -318,4 +363,4 @@ const AddNewAdmin = () => {
   );
 };
 
-export default AddNewAdmin;
+export default EditAdmin;
