@@ -24,6 +24,13 @@ const Sidebar = () => {
               </NavLink>
             </li>
             <li>
+              <NavLink to="/admin/properties">
+                <RiProductHuntLine />
+                Properties
+              </NavLink>
+            </li>
+            <li></li>
+            <li>
               <NavLink to="/admin/product">
                 <RiProductHuntLine />
                 Products
@@ -74,6 +81,7 @@ const Sidebar = () => {
                 <FiLogOut />
                 Logout
               </NavLink>
+
             </li>
           </ul>
         </div>

@@ -131,7 +131,6 @@ const getRolesByUserId = (req, res) => {
 // ASSIGN role to user (insert into users_roles)
 const addUserRole = (req, res) => {
   const { user_id, role_id } = req.body;
-  console.log("ADD USER ROLE =>", user_id, role_id);
 
   if (!user_id || !role_id) {
     return res
