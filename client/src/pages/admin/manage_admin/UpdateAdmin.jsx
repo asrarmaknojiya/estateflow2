@@ -4,9 +4,9 @@ import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import { MdSave } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
-import axios from "axios";
 
-const API_BASE_URL = "http://localhost:4500";
+// ⬇️ axios instance import
+import api from "../../../api/axiosInstance";
 
 const EditAdmin = () => {
   const navigate = useNavigate();
@@ -27,7 +27,6 @@ const EditAdmin = () => {
 
   const [submitting, setSubmitting] = useState(false);
 
-  // load initial data + fetch roles + user roles
   useEffect(() => {
     if (!admin) {
       navigate("/admin/manage-admins");
@@ -37,28 +36,26 @@ const EditAdmin = () => {
     setName(admin.name || "");
     setEmail(admin.email || "");
     setPhoneNumber(admin.number || "");
+    setStatus(admin.img || "");
     setStatus(admin.status || "active");
 
     const fetchRolesAndUserRoles = async () => {
       try {
         // 1) all roles
-        const rolesRes = await axios.get(`${API_BASE_URL}/roles`);
+        const rolesRes = await api.get("/roles");
         const allRoles = Array.isArray(rolesRes.data) ? rolesRes.data : [];
 
-        // hide "admin" role from UI
         const visibleRoles = allRoles.filter(
           (r) => r.name?.toLowerCase() !== "admin"
         );
         setRoles(visibleRoles);
 
-        // 2) current roles from users_roles table
+        // 2) current roles from users_roles
         let selectedIds = [];
         let userRoles = [];
 
         try {
-          const userRolesRes = await axios.get(
-            `${API_BASE_URL}/user-roles/${admin.id}`
-          );
+          const userRolesRes = await api.get(`/user-roles/${admin.id}`);
           userRoles = Array.isArray(userRolesRes.data)
             ? userRolesRes.data
             : [];
@@ -69,10 +66,8 @@ const EditAdmin = () => {
         setExistingUserRoles(userRoles);
 
         if (userRoles.length > 0) {
-          // use role_id from users_roles
           selectedIds = userRoles.map((ur) => ur.role_id);
         } else if (admin.roles) {
-          // fallback: roles string from /users (e.g. "seller,buyer")
           const roleNames = admin.roles
             .split(",")
             .map((r) => r.trim().toLowerCase())
@@ -85,7 +80,7 @@ const EditAdmin = () => {
 
         setSelectedRoleIds(selectedIds);
       } catch (err) {
-        console.error("Failed to fetch roles / user roles for edit:", err);
+        console.error("Failed to fetch roles / user roles:", err);
       }
     };
 
@@ -143,22 +138,21 @@ const EditAdmin = () => {
         formData.append("img", profileFile);
       }
 
-      await axios.put(`${API_BASE_URL}/users/${admin.id}`, formData);
+      await api.put(`/users/${admin.id}`, formData);
 
-      // 2) update roles:
-      // delete old users_roles mappings (only if they exist)
+      // 2) delete old role mappings
       if (existingUserRoles.length > 0) {
         await Promise.all(
           existingUserRoles.map((ur) =>
-            axios.delete(`${API_BASE_URL}/user-roles/${ur.id}`)
+            api.delete(`/user-roles/${ur.id}`)
           )
         );
       }
 
-      // add new mappings
+      // 3) assign new roles
       await Promise.all(
         selectedRoleIds.map((roleId) =>
-          axios.post(`${API_BASE_URL}/user-roles`, {
+          api.post("/user-roles", {
             user_id: admin.id,
             role_id: roleId,
           })
@@ -253,12 +247,10 @@ const EditAdmin = () => {
                   </div>
                 </div>
 
-                {/* Password (optional, not pre-filled) */}
+                {/* Password */}
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label htmlFor="edit-password">
-                      New Password (optional)
-                    </label>
+                    <label htmlFor="edit-password">New Password (optional)</label>
                     <input
                       type="password"
                       id="edit-password"
@@ -274,7 +266,6 @@ const EditAdmin = () => {
 
           {/* RIGHT SIDE */}
           <div className="dashboard-add-content-right-side">
-            {/* Profile */}
             <div className="dashboard-add-content-card">
               <h6>Profile</h6>
               <div className="add-product-form-container">
@@ -283,7 +274,7 @@ const EditAdmin = () => {
                   <div className="add-product-upload-icon">
                     <img
                       src="https://cdn-icons-png.flaticon.com/512/1829/1829586.png"
-                      alt="Upload Icon"
+                      alt="Upload"
                     />
                   </div>
                   <p className="add-product-upload-text">
@@ -299,11 +290,10 @@ const EditAdmin = () => {
                   <input
                     type="file"
                     id="editImageInputFile"
-                    name="img"
                     style={{ display: "none" }}
                     accept="image/*"
                     onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
+                      if (e.target.files?.[0]) {
                         setProfileFile(e.target.files[0]);
                       }
                     }}
@@ -319,7 +309,6 @@ const EditAdmin = () => {
                 <label htmlFor="edit-admin-status">Admin Status</label>
                 <select
                   id="edit-admin-status"
-                  name="status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
@@ -341,11 +330,9 @@ const EditAdmin = () => {
                       <label
                         key={role.id}
                         className="role-checkbox-item"
-                        style={{ display: "block", marginBottom: "6px" }}
                       >
                         <input
                           type="checkbox"
-                          value={role.id}
                           checked={selectedRoleIds.includes(role.id)}
                           onChange={() => handleRoleToggle(role.id)}
                         />{" "}

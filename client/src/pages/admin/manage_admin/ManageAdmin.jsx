@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  HiOutlineArrowLeft,
-  HiOutlineArrowRight,
-} from "react-icons/hi";
+import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
 import { IoIosEye } from "react-icons/io";
 import { MdDeleteForever } from "react-icons/md";
 import { IoPencil } from "react-icons/io5";
@@ -13,9 +10,9 @@ import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
 import AdminProfile from "../../../assets/image/dash-profile.png";
 
-import axios from "axios";
+// axios instance
+import api from "../../../api/axiosInstance";
 
-const API_BASE_URL = "http://localhost:4500";
 const PAGE_SIZE = 10;
 
 const ManageAdmin = () => {
@@ -24,23 +21,55 @@ const ManageAdmin = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // ✅ yaha pe userId -> "seller, buyer" jaisa map rakhenge
+  const [rolesMap, setRolesMap] = useState({});
+
   const navigate = useNavigate();
 
-  /* ===================== FETCH ALL USERS ===================== */
+  /* ===================== FETCH ALL USERS + ROLES ===================== */
   useEffect(() => {
-    const fetchAdmins = async () => {
+    const fetchAdminsAndRoles = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_BASE_URL}/users`);
-        setAdmins(res.data || []);
+
+        // 1) users
+        const usersRes = await api.get("/users");
+        const users = Array.isArray(usersRes.data) ? usersRes.data : [];
+        setAdmins(users);
+
+        // 2) user_roles + roles join se saare mapping
+        //    controller: getUserRoles => /user-roles
+        const rolesRes = await api.get("/user-roles");
+        const mappings = Array.isArray(rolesRes.data) ? rolesRes.data : [];
+
+        // 3) user_id ke hisaab se role_name list banaenge
+        const map = {};
+        mappings.forEach((row) => {
+          const uid = row.user_id;
+          const rname = row.role_name;
+
+          if (!uid || !rname) return;
+
+          if (!map[uid]) map[uid] = [];
+          if (!map[uid].includes(rname)) {
+            map[uid].push(rname);
+          }
+        });
+
+        // convert arrays -> "role1, role2"
+        Object.keys(map).forEach((uid) => {
+          map[uid] = map[uid].join(", ");
+        });
+
+        setRolesMap(map);
       } catch (err) {
-        console.error("Failed to fetch admins:", err);
+        console.error("Failed to fetch admins / roles:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAdmins();
+    fetchAdminsAndRoles();
   }, []);
 
   /* ===================== DELETE USER ===================== */
@@ -49,8 +78,15 @@ const ManageAdmin = () => {
     if (!allow) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/users/${id}`);
+      await api.delete(`/users/${id}`);
       setAdmins((prev) => prev.filter((u) => u.id !== id));
+
+      // rolesMap se bhi clean kar dete hain
+      setRolesMap((prev) => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
     } catch (err) {
       console.error("Failed to delete admin:", err);
     }
@@ -85,12 +121,24 @@ const ManageAdmin = () => {
   const formatDate = (value) => {
     if (!value) return "-";
     const d = new Date(value);
-    if (isNaN(d)) return "-";
+    if (Number.isNaN(d.getTime())) return "-";
     return d.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
+  };
+
+  const getStatusClass = (status) => {
+    if (status === "active") return "status published";
+    if (status === "block" || status === "blocked") return "status out-of-stock";
+    return "status";
+  };
+
+  const getStatusLabel = (status) => {
+    if (!status) return "-";
+    if (status === "block") return "Blocked";
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   return (
@@ -131,19 +179,20 @@ const ManageAdmin = () => {
               <table>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Status</th>
-                    <th>Added</th>
-                    <th>Action</th>
+                    <th style={{ width: "22%" }}>Name</th>
+                    <th style={{ width: "18%" }}>Email</th>
+                    <th style={{ width: "14%" }}>Phone</th>
+                    <th style={{ width: "16%" }}>Roles</th>
+                    <th style={{ width: "10%" }}>Status</th>
+                    <th style={{ width: "10%" }}>Added</th>
+                    <th style={{ width: "10%" }}>Action</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {paginatedAdmins.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: "center" }}>
+                      <td colSpan={7} style={{ textAlign: "center" }}>
                         No admins found
                       </td>
                     </tr>
@@ -151,20 +200,18 @@ const ManageAdmin = () => {
                     paginatedAdmins.map((user) => (
                       <tr key={user.id}>
                         <td className="product-info admin-profile">
-                          <img src={AdminProfile} alt="profile" />
+                          <img src={`/uploads/${user.img}`} alt="profile" />
                           <span>{user.name || "-"}</span>
                         </td>
                         <td>{user.email || "-"}</td>
                         <td>{user.number || "-"}</td>
+
+                        {/* ✅ roles from /user-roles map */}
+                        <td>{rolesMap[user.id] || "-"}</td>
+
                         <td>
-                          <span
-                            className={
-                              user.status === "active"
-                                ? "status published"
-                                : "status out-of-stock"
-                            }
-                          >
-                            {user.status}
+                          <span className={getStatusClass(user.status)}>
+                            {getStatusLabel(user.status)}
                           </span>
                         </td>
                         <td>{formatDate(user.created_at)}</td>
@@ -189,7 +236,10 @@ const ManageAdmin = () => {
                 </span>
 
                 <ul className="pagination">
-                  <li className="arrow" onClick={() => changePage(currentPage - 1)}>
+                  <li
+                    className="arrow"
+                    onClick={() => changePage(currentPage - 1)}
+                  >
                     <HiOutlineArrowLeft />
                   </li>
 
@@ -203,7 +253,10 @@ const ManageAdmin = () => {
                     </li>
                   ))}
 
-                  <li className="arrow" onClick={() => changePage(currentPage + 1)}>
+                  <li
+                    className="arrow"
+                    onClick={() => changePage(currentPage + 1)}
+                  >
                     <HiOutlineArrowRight />
                   </li>
                 </ul>

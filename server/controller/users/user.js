@@ -82,9 +82,8 @@ const updateUser = (req, res) => {
   const { name, email, number, alt_number, password, status, address } =
     req.body;
 
-  const img = req.file ? req.file.filename : null;
+  const img = req.file ? req.file.filename : null; // sirf naya file aaye to hi value
 
-  // helper: check kya sirf password aaya hai
   const onlyPassword =
     password &&
     password.trim() !== "" &&
@@ -96,14 +95,14 @@ const updateUser = (req, res) => {
     !address &&
     !img;
 
-  // ----------------- CASE 1: password change (kahi bhi use ho raha) -----------------
+  // ----------------- CASE 1: password change -----------------
   if (password && password.trim() !== "") {
     bcrypt.hash(password, SALT_ROUNDS, (hashErr, hashedPassword) => {
       if (hashErr) {
         return res.status(500).json({ error: "password hash error" });
       }
 
-      // ✅ A. Sirf password update karna hai
+      // ✅ A. Sirf password update
       if (onlyPassword) {
         const q = "UPDATE users SET password = ? WHERE id = ?";
         connection.query(q, [hashedPassword, id], (err, result) => {
@@ -120,11 +119,12 @@ const updateUser = (req, res) => {
         return;
       }
 
-      // ✅ B. Password + baaki fields bhi aa rahe hain (frontend se)
+      // ✅ B. Password + baaki fields
       const q = `
         UPDATE users 
         SET name = ?, email = ?, number = ?, alt_number = ?, 
-            password = ?, status = ?, address = ?, img = ?
+            password = ?, status = ?, address = ?, 
+            img = COALESCE(?, img)
         WHERE id = ?
       `;
 
@@ -136,7 +136,7 @@ const updateUser = (req, res) => {
         hashedPassword,
         status || null,
         address || null,
-        img || null,
+        img,      // ⚠️ agar null hoga to COALESCE old img use karega
         id,
       ];
 
@@ -153,14 +153,15 @@ const updateUser = (req, res) => {
       });
     });
 
-    return; // important: yahi pe function end
+    return;
   }
 
   // ----------------- CASE 2: password nahi bheja (normal update) -----------------
   const q = `
     UPDATE users 
     SET name = ?, email = ?, number = ?, alt_number = ?, 
-        status = ?, address = ?, img = ?
+        status = ?, address = ?, 
+        img = COALESCE(?, img)
     WHERE id = ?
   `;
 
@@ -171,7 +172,7 @@ const updateUser = (req, res) => {
     alt_number || null,
     status || null,
     address || null,
-    img || null,
+    img,      // 🟢 yaha bhi COALESCE use karega: null → old img
     id,
   ];
 
