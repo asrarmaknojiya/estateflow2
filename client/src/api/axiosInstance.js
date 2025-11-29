@@ -1,3 +1,4 @@
+// src/api/axiosInstance.js
 import axios from 'axios';
 
 const api = axios.create({
@@ -20,32 +21,34 @@ api.interceptors.response.use(
   res => res,
   async (error) => {
     const originalRequest = error.config;
-    if (!originalRequest) return Promise.reject(error);
 
-    // only try once
+    // ⛔ NEVER refresh token at /login
+    if (originalRequest.url === "/login") {
+      return Promise.reject(error);
+    }
+
+    // refresh flow
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          localStorage.clear();
-          window.location.href = '/admin/login';
-          return Promise.reject(error);
-        }
+        const refresh = localStorage.getItem("refreshToken");
+        if (!refresh) throw new Error("No refresh");
 
-        const r = await axios.post('http://localhost:4500/refresh-token', { refreshToken });
+        const r = await axios.post("http://localhost:4500/refresh-token", {
+          refreshToken: refresh,
+        });
 
-        localStorage.setItem('accessToken', r.data.accessToken);
-        // set new access token in original request and retry
+        localStorage.setItem("accessToken", r.data.accessToken);
         originalRequest.headers.Authorization = `Bearer ${r.data.accessToken}`;
+
         return api(originalRequest);
       } catch (e) {
-        // refresh failed => force logout on client
         localStorage.clear();
-        window.location.href = '/admin/login';
-        return Promise.reject(e);
+        window.location.href = "/admin/login";
       }
     }
+
     return Promise.reject(error);
   }
 );

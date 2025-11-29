@@ -1,33 +1,33 @@
+// src/routes/admin/ProtectedRoute.jsx
+import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Navigate, Outlet, useOutletContext } from "react-router-dom";
 import api from "../../api/axiosInstance";
 
 const ProtectedRoute = () => {
+  const access = localStorage.getItem("accessToken");
+
+  if (!access) return <Navigate to="/admin/login" replace />;
+
   const [checking, setChecking] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
   const [me, setMe] = useState(null);
 
   useEffect(() => {
-    api
-      .get("me")
-      .then((res) => {
-        setMe(res.data); // user + roles
-        setAuthorized(true);
-        setChecking(false);
-      })
-      .catch(() => {
-        setAuthorized(false);
-        setChecking(false);
-      });
+    const verify = async () => {
+      try {
+        const res = await api.get("/me"); // ⭐ FIXED
+        setMe(res.data);
+      } catch (err) {
+        localStorage.clear();
+        window.location.href = "/admin/login";
+      }
+      setChecking(false);
+    };
+    verify();
   }, []);
 
-  if (checking) return null;
+  if (checking) return <div></div>;
 
-  return authorized ? (
-    <Outlet context={{ me }} />
-  ) : (
-    <Navigate to="/admin/login" replace />
-  );
+  return <Outlet context={{ me }} />;
 };
 
 export default ProtectedRoute;

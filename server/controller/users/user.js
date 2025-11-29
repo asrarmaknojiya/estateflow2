@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 
 const SALT_ROUNDS = 10;
 
-// GET all users
+// -------------------- GET ALL USERS --------------------
 const getUsers = (req, res) => {
   const q = "SELECT * FROM users";
 
@@ -13,39 +13,36 @@ const getUsers = (req, res) => {
   });
 };
 
-// GET single user by id
+// -------------------- GET USER BY ID --------------------
 const getUserById = (req, res) => {
   const { id } = req.params;
   const q = "SELECT * FROM users WHERE id = ?";
 
   connection.query(q, [id], (err, data) => {
     if (err) return res.status(500).json({ error: "database error" });
-    if (!data || data.length === 0) {
-      return res.status(404).json({ error: "not found" });
-    }
+    if (!data.length) return res.status(404).json({ error: "not found" });
+
     return res.status(200).json(data[0]);
   });
 };
 
-// ADD new user (with bcrypt)
+// -------------------- ADD USER --------------------
 const addUser = (req, res) => {
   const { name, email, number, alt_number, password, status, address } =
     req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ error: "email and password are required" });
+    return res.status(400).json({ error: "email and password required" });
   }
 
   const img = req.file ? req.file.filename : null;
 
   bcrypt.hash(password, SALT_ROUNDS, (hashErr, hashedPassword) => {
-    if (hashErr) {
-      return res.status(500).json({ error: "password hash error" });
-    }
+    if (hashErr) return res.status(500).json({ error: "hash error" });
 
     const q = `
       INSERT INTO users 
-        (name, email, number, alt_number, password,img, status, address )
+      (name, email, number, alt_number, password, img, status, address)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -60,25 +57,41 @@ const addUser = (req, res) => {
       address || null,
     ];
 
-
     connection.query(q, params, (err, result) => {
-      if (err) {
-        return res.status(500).json({ error: "database error", details: err });
-      }
-      else {
-        return res.status(201).json({
-          message: "created",
-          insertId: result.insertId,
-        });
-      }
+      if (err) return res.status(500).json({ error: "database error" });
+
+      return res.status(201).json({
+        message: "created",
+        insertId: result.insertId,
+      });
     });
   });
 };
 
-// UPDATE user (simple)
-// UPDATE user (simple + safe)
+// -------------------- UPDATE USER --------------------
 const updateUser = (req, res) => {
+  const loggedInUserId = req.user.id;
+  const loggedInUserRole = req.user.roles; // array e.g ["admin"] or ["buyer"]
+  const isAdmin = loggedInUserRole.includes("admin");
+
   const { id } = req.params;
+
+  // ❌ Non-admin cannot update others
+  if (!isAdmin && Number(id) !== Number(loggedInUserId)) {
+    return res.status(403).json({
+      error: "You can only update your own profile",
+    });
+  }
+
+  // ❌ Non-admin cannot modify ROLE fields
+  if (req.body.role_id || req.body.roles || req.body.role) {
+    if (!isAdmin) {
+      return res.status(403).json({
+        error: "Only admin can change roles",
+      });
+    }
+  }
+
   const { name, email, number, alt_number, password, status, address } =
     req.body;
 
@@ -98,9 +111,7 @@ const updateUser = (req, res) => {
   // ----------------- CASE 1: password change -----------------
   if (password && password.trim() !== "") {
     bcrypt.hash(password, SALT_ROUNDS, (hashErr, hashedPassword) => {
-      if (hashErr) {
-        return res.status(500).json({ error: "password hash error" });
-      }
+      if (hashErr) return res.status(500).json({ error: "hash error" });
 
       // ✅ A. Sirf password update
       if (onlyPassword) {
@@ -141,14 +152,8 @@ const updateUser = (req, res) => {
       ];
 
       connection.query(q, params, (err, result) => {
-        if (err) {
-          return res
-            .status(500)
-            .json({ error: "database error", details: err });
-        }
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ error: "not found" });
-        }
+        if (err) return res.status(500).json({ error: "database error" });
+
         return res.status(200).json({ message: "updated" });
       });
     });
@@ -156,7 +161,7 @@ const updateUser = (req, res) => {
     return;
   }
 
-  // ----------------- CASE 2: password nahi bheja (normal update) -----------------
+  // Password not provided → update normally
   const q = `
     UPDATE users 
     SET name = ?, email = ?, number = ?, alt_number = ?, 
@@ -177,53 +182,27 @@ const updateUser = (req, res) => {
   ];
 
   connection.query(q, params, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "database error", details: err });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "not found" });
-    }
+    if (err) return res.status(500).json({ error: "database error" });
+
     return res.status(200).json({ message: "updated" });
   });
 };
-// DELETE user (hard delete, simple)
-// DELETE user + remove role mappings
+
+// -------------------- DELETE USER --------------------
 const deleteUser = (req, res) => {
   const { id } = req.params;
 
-  // 1) delete from users_roles where user_id = ?
-  const deleteUserRoles = "DELETE FROM users_roles WHERE user_id = ?";
-
-  connection.query(deleteUserRoles, [id], (roleErr) => {
-    if (roleErr) {
-      return res.status(500).json({
-        error: "database error (users_roles delete failed)",
-        details: roleErr,
-      });
-    }
-
-    // 2) delete user from users table
-    const deleteUserQuery = "DELETE FROM users WHERE id = ?";
-
-    connection.query(deleteUserQuery, [id], (userErr, result) => {
-      if (userErr) {
-        return res.status(500).json({
-          error: "database error (user delete failed)",
-          details: userErr,
-        });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: "user not found" });
-      }
+  // Remove role assignment first
+  connection.query("DELETE FROM users_roles WHERE user_id=?", [id], () => {
+    connection.query("DELETE FROM users WHERE id=?", [id], (err, result) => {
+      if (err) return res.status(500).json({ error: "database error" });
 
       return res.status(200).json({
-        message: "user deleted + role mappings removed successfully",
+        message: "user deleted + role mappings removed",
       });
     });
   });
 };
-
 
 module.exports = {
   getUsers,
