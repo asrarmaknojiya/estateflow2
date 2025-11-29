@@ -5,8 +5,9 @@ import { MdSave } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
 import { IoMdArrowDropright } from "react-icons/io";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import api from "../../../api/axiosInstance";
 
+// ⬇️ use axios instance instead of axios + baseURL
+import api from "../../../api/axiosInstance";
 
 const AddNewAdmin = () => {
   const navigate = useNavigate();
@@ -24,11 +25,11 @@ const AddNewAdmin = () => {
   const [selectedRoleIds, setSelectedRoleIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // fetch roles (simple, no token)
+  // fetch roles (simple, now via api instance)
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const res = await api.get(`/roles`);
+        const res = await api.get("/roles");
         const allRoles = Array.isArray(res.data) ? res.data : [];
 
         // "admin" role UI se hide rakhenge
@@ -95,14 +96,14 @@ const AddNewAdmin = () => {
       formData.append("status", status);
       if (profileFile) formData.append("img", profileFile);
 
-      const userRes = await api.post(`/users`, formData);
+      const userRes = await api.post("/users", formData);
       const userId = userRes.data?.insertId;
 
       // 2) assign roles
       if (userId) {
         await Promise.all(
           selectedRoleIds.map((roleId) =>
-            api.post(`/user-roles`, {
+            api.post("/user-roles", {
               user_id: userId,
               role_id: roleId,
             })

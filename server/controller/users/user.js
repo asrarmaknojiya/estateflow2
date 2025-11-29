@@ -95,18 +95,48 @@ const updateUser = (req, res) => {
   const { name, email, number, alt_number, password, status, address } =
     req.body;
 
-  const img = req.file ? req.file.filename : null;
+  const img = req.file ? req.file.filename : null; // sirf naya file aaye to hi value
 
-  // If password provided → hash first
+  const onlyPassword =
+    password &&
+    password.trim() !== "" &&
+    !name &&
+    !email &&
+    !number &&
+    !alt_number &&
+    !status &&
+    !address &&
+    !img;
+
+  // ----------------- CASE 1: password change -----------------
   if (password && password.trim() !== "") {
     bcrypt.hash(password, SALT_ROUNDS, (hashErr, hashedPassword) => {
       if (hashErr) return res.status(500).json({ error: "hash error" });
 
+      // ✅ A. Sirf password update
+      if (onlyPassword) {
+        const q = "UPDATE users SET password = ? WHERE id = ?";
+        connection.query(q, [hashedPassword, id], (err, result) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ error: "database error", details: err });
+          }
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "not found" });
+          }
+          return res.status(200).json({ message: "password updated" });
+        });
+        return;
+      }
+
+      // ✅ B. Password + baaki fields
       const q = `
-        UPDATE users SET 
-          name=?, email=?, number=?, alt_number=?, 
-          password=?, status=?, address=?, img=?
-        WHERE id=?
+        UPDATE users 
+        SET name = ?, email = ?, number = ?, alt_number = ?, 
+            password = ?, status = ?, address = ?, 
+            img = COALESCE(?, img)
+        WHERE id = ?
       `;
 
       const params = [
@@ -117,7 +147,7 @@ const updateUser = (req, res) => {
         hashedPassword,
         status || null,
         address || null,
-        img || null,
+        img,      // ⚠️ agar null hoga to COALESCE old img use karega
         id,
       ];
 
@@ -133,10 +163,11 @@ const updateUser = (req, res) => {
 
   // Password not provided → update normally
   const q = `
-    UPDATE users SET 
-      name=?, email=?, number=?, alt_number=?, 
-      status=?, address=?, img=?
-    WHERE id=?
+    UPDATE users 
+    SET name = ?, email = ?, number = ?, alt_number = ?, 
+        status = ?, address = ?, 
+        img = COALESCE(?, img)
+    WHERE id = ?
   `;
 
   const params = [
@@ -146,7 +177,7 @@ const updateUser = (req, res) => {
     alt_number || null,
     status || null,
     address || null,
-    img || null,
+    img,      // 🟢 yaha bhi COALESCE use karega: null → old img
     id,
   ];
 
