@@ -62,13 +62,7 @@ const Sidebar = () => {
             <li>
               <NavLink to="/admin/manage-admins">
                 <RiAdminLine />
-                Manage Admins
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/customers">
-                <LuUsers />
-                Customers
+                Manage Users
               </NavLink>
             </li>
           </ul>

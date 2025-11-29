@@ -5,7 +5,7 @@ const SALT_ROUNDS = 10;
 
 // -------------------- GET ALL USERS --------------------
 const getUsers = (req, res) => {
-  const q = "SELECT * FROM users";
+  const q = "SELECT * FROM users ";
 
   connection.query(q, (err, data) => {
     if (err) return res.status(500).json({ error: "database error" });

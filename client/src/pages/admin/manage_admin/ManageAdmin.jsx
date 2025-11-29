@@ -32,6 +32,7 @@ const ManageAdmin = () => {
         setLoading(true);
         const res = await api.get(`/users`);
         setAdmins(res.data || []);
+        console.log(res.data)
       } catch (err) {
         console.error("Failed to fetch admins:", err);
       } finally {
