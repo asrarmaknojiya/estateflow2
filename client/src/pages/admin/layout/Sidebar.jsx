@@ -140,6 +140,30 @@ const Sidebar = () => {
                 <span>Properties</span>
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/admin/product" onClick={handleNavClick}>
+                <RiProductHuntLine />
+                <span>Products</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/category" onClick={handleNavClick}>
+                <MdOutlineCategory />
+                <span>Category</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/orders" onClick={handleNavClick}>
+                <IoGiftOutline />
+                <span>Orders</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/coupon" onClick={handleNavClick}>
+                <RiCoupon2Line />
+                <span>Coupon</span>
+              </NavLink>
+            </li>
           </ul>
         </div>
 
