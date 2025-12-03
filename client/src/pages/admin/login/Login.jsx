@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
+import "../../../assets/css/admin/login.css";
 
 const Login = () => {
   const nav = useNavigate();
@@ -24,23 +25,35 @@ const Login = () => {
   };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h2>Login</h2>
-      <form onSubmit={submitLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        /><br />
-
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        /><br />
-
-        <button type="submit">Login</button>
-      </form>
+    <div className="container">
+      <div className="login-container">
+        <div className="login-section">
+          <div className="login-heading ">
+            <h5>Login</h5>
+          </div>
+          <div className="Login-form">
+            <form onSubmit={submitLogin}>
+              <div className="login-input">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="login-input">
+                <input
+                  type="password"
+                  placeholder="Password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="login-button">
+                <button type="submit" className="primary-btn">Login</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

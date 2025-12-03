@@ -11,12 +11,17 @@ const jwt = require("jsonwebtoken");
 const login = (req, res) => {
   const { email, password } = req.body;
 
+  // grab IP + Agent
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const agent = req.headers["user-agent"];
+
   connection.query(
     "SELECT * FROM users WHERE email = ? LIMIT 1",
     [email],
     (err, rows) => {
       if (err) return res.status(500).json({ error: "DB error" });
-      if (!rows.length) return res.status(404).json({ error: "User not found" });
+      if (!rows.length)
+        return res.status(404).json({ error: "User not found" });
 
       const user = rows[0];
 
@@ -24,15 +29,17 @@ const login = (req, res) => {
         return res.status(400).json({ error: "Wrong password" });
 
       const roleSQL = `
-        SELECT r.name FROM users_roles ur
+        SELECT r.name 
+        FROM users_roles ur
         JOIN roles r ON ur.role_id = r.id
         WHERE ur.user_id = ?
       `;
 
       connection.query(roleSQL, [user.id], (roleErr, rRows) => {
-        if (roleErr) return res.status(500).json({ error: "Role fetch error" });
+        if (roleErr)
+          return res.status(500).json({ error: "Role fetch error" });
 
-        const roles = rRows.map(r => r.name);
+        const roles = rRows.map((r) => r.name);
 
         const userPayload = { id: user.id, email: user.email, roles };
 
@@ -41,13 +48,13 @@ const login = (req, res) => {
 
         const insertSQL = `
           INSERT INTO active_tokens 
-          (access_token, refresh_token, user_id, is_blacklisted, access_expires_at, refresh_expires_at)
-          VALUES (?, ?, ?, 0, DATE_ADD(NOW(), INTERVAL 15 MINUTE), DATE_ADD(NOW(), INTERVAL 7 DAY))
+          (access_token, refresh_token, user_id, ip_address, user_agent, last_activity, is_blacklisted, access_expires_at, refresh_expires_at)
+          VALUES (?, ?, ?, ?, ?, NOW(), 0, DATE_ADD(NOW(), INTERVAL 15 MINUTE), DATE_ADD(NOW(), INTERVAL 7 DAY))
         `;
 
         connection.query(
           insertSQL,
-          [accessToken, refreshToken, user.id],
+          [accessToken, refreshToken, user.id, ip, agent],
           () => {
             return res.json({
               message: "Login successful",
@@ -76,7 +83,9 @@ const refreshAccessToken = (req, res) => {
   `;
 
   connection.query(sql, [refreshToken], (err, rows) => {
-    if (!rows.length) return res.status(401).json({ error: "Invalid refresh token" });
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (!rows.length)
+      return res.status(401).json({ error: "Invalid refresh token" });
 
     const row = rows[0];
 
@@ -87,7 +96,6 @@ const refreshAccessToken = (req, res) => {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
-    // ⭐ Fetch roles again
     const roleSQL = `
       SELECT r.name 
       FROM users_roles ur
@@ -96,22 +104,24 @@ const refreshAccessToken = (req, res) => {
     `;
 
     connection.query(roleSQL, [row.user_id], (rErr, rRows) => {
-      if (rErr) return res.status(500).json({ error: "Role fetch failed" });
+      if (rErr)
+        return res.status(500).json({ error: "Role fetch failed" });
 
-      const roles = rRows.map(r => r.name);
+      const roles = rRows.map((r) => r.name);
 
       const newPayload = {
         id: row.user_id,
         email: payload.email,
-        roles
+        roles,
       };
 
       const newAccess = generateAccessToken(newPayload);
 
       const upd = `
         UPDATE active_tokens SET 
-        access_token=?, 
-        access_expires_at=DATE_ADD(NOW(), INTERVAL 15 MINUTE)
+          access_token = ?, 
+          access_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE),
+          last_activity = NOW()
         WHERE refresh_token = ?
       `;
 
@@ -121,7 +131,6 @@ const refreshAccessToken = (req, res) => {
     });
   });
 };
-
 
 // ---------------- LOGOUT ----------------
 const logout = (req, res) => {
@@ -143,7 +152,9 @@ const me = (req, res) => {
   `;
 
   connection.query(userSQL, [id], (err, rows) => {
-    if (!rows.length) return res.status(404).json({ error: "User not found" });
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (!rows.length)
+      return res.status(404).json({ error: "User not found" });
 
     const user = rows[0];
 
@@ -155,7 +166,10 @@ const me = (req, res) => {
     `;
 
     connection.query(roleSQL, [id], (rErr, rRows) => {
-      const roles = rRows.map(r => r.name);
+      if (rErr)
+        return res.status(500).json({ error: "Role fetch failed" });
+
+      const roles = rRows.map((r) => r.name);
 
       return res.json({ user, roles });
     });
@@ -163,3 +177,4 @@ const me = (req, res) => {
 };
 
 module.exports = { login, refreshAccessToken, logout, me };
+    

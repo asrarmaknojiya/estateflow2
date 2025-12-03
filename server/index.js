@@ -16,7 +16,10 @@ const URL = process.env.URL || `http://localhost:${port}`;
 
 dotenv.config();
 const authRoutes = require('./routes/authRoutes/authRoutes');
-const { blacklistExpiredRefresh, deleteBlacklistedOlder } = require('./utils/tokenCleanup');
+const { 
+  blacklistExpiredTokens, 
+  deleteOldBlacklistedTokens 
+} = require('./utils/tokenCleanup');
 
 const app = express();
 
@@ -39,6 +42,6 @@ app.listen(port, () => {
 
 // run cleanup tasks every hour (after server up)
 setInterval(() => {
-  blacklistExpiredRefresh();
-  deleteBlacklistedOlder();
+  blacklistExpiredTokens();
+  deleteOldBlacklistedTokens();
 }, 60 * 60 * 1000);
