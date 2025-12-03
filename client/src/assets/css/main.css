@@ -28,6 +28,7 @@
   --primary-font: "Poppins", serif;
   --secondary-font: "Inter", serif;
   --info-font: "Public Sans", serif;
+  --navbar-height: 70px;
 }
 
 /* scrollbar-design */
@@ -166,16 +167,25 @@ button {
 
 /* ----Dashboard-design-global-class--- */
 
+/* ----Dashboard-design-global-class--- */
+
+/* Base: full width (used when sidebar is overlay / hidden) */
 .admin-panel-header-div {
   font-family: var(--info-font);
   background-color: var(--light-white-color);
-  width: calc(100% - 250px);
-  padding: 8px 20px 20px 20px;
+  width: 100%;
+  padding: 16px 24px 24px 24px;
   position: fixed;
-  height: calc(100vh - 77px);
-  left: 250px;
-  top: 77px;
+  height: calc(100vh - var(--navbar-height));  /* Dynamic */
+  left: 0;
+  top: var(--navbar-height);                    /* Now perfect! */
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  margin-top: 0 !important; /* safety */
 }
+
+
+
 
 .admin-panel-header-div h5 {
   font-weight: 600;
@@ -537,3 +547,14 @@ button {
 }
 
 /* ----delete-modal-container---- */
+
+
+
+
+/* Desktop: shift when sidebar is fixed */
+@media (min-width: 1025px) {
+  .admin-panel-header-div {
+    width: calc(100% - 250px);
+    left: 250px;
+  }
+}

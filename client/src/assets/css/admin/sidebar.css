@@ -1,44 +1,183 @@
 .admin-dashboard-sidebar {
-  background: var(--light-white-color);
+  background: var(--white-color);
   width: 250px;
   height: 100vh;
-  overflow-y: scroll;
+  overflow-y: auto;
   border-right: 1px solid var(--primary-border-color);
   color: var(--light-gray-color);
   font-family: var(--primary-font);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 3010;
+  transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column; /* so logout can sit at bottom */
 }
+
+/* Scrollbar */
+.admin-dashboard-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.admin-dashboard-sidebar::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 10px;
+}
+
+/* Logo (desktop default) */
 .admin-sidebar-logo h4 {
-  letter-spacing: 10px;
+  letter-spacing: 8px;
   text-align: center;
   padding: 22px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
 }
+
+/* Desktop logo only */
+.desktop-logo {
+  border-bottom: 1px solid var(--primary-border-color);
+}
+
+/* HEADER – mobile/tablet: logo left + close right */
+.sidebar-mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 14px;
+  background: var(--white-color);
+  border-bottom: 1px solid var(--primary-border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* override logo style inside mobile header */
+.sidebar-mobile-header .admin-sidebar-logo h4 {
+  text-align: left;
+  padding: 0;
+  letter-spacing: 4px;
+  font-size: 20px;
+}
+
+/* Close button */
+.sidebar-close-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: var(--light-gray-color);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+.sidebar-close-btn:hover {
+  background: var(--sidebar-bg-color);
+  color: var(--primary-btn-bg);
+}
+
+/* Menu base (your original styles, slightly spaced) */
 .admin-dashboard-sidebar .menu-content {
-  margin-bottom: 20px;
-  padding: 0 20px;
+  margin-bottom: 16px;
+  padding: 12px 20px 0;
 }
 .admin-dashboard-sidebar .menu-content h6 {
   font-size: 12px;
-  color: var(--primary-btn-bg);
+  color: var(--light-black-color);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.admin-dashboard-sidebar .menu-content ul {
+  padding: 0;
+  margin: 0;
+}
+.admin-dashboard-sidebar .menu-content li {
+  margin-bottom: 6px;
 }
 .admin-dashboard-sidebar .menu-content a {
   display: flex;
-  font-size: 14px;
-  color: var(--light-gray-color);
-  margin-top: 5px;
   align-items: center;
-  padding: 14px 20px;
+  gap: 14px;
+  font-size: 14px;
+  color: var(--black-color);
+  padding: 12px 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .admin-dashboard-sidebar .menu-content li svg {
   font-size: 20px;
-  margin-right: 8px;
 }
 .menu-content li a:hover {
   background-color: var(--sidebar-bg-color);
   color: var(--primary-btn-bg);
-  border-radius: 6px;
 }
 .menu-content li a.active {
   background-color: var(--sidebar-bg-color);
   color: var(--primary-btn-bg);
-  border-radius: 6px;
+}
+
+/* ====== OVERLAY FOR MOBILE/TABLET ====== */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 3000;
+  pointer-events: auto;
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ====== LOGOUT AT BOTTOM ====== */
+.sidebar-logout-section {
+  margin-top: auto;
+  padding: 16px 20px 20px;
+  border-top: 1px solid #ededed;
+}
+.sidebar-logout-section ul {
+  margin: 0;
+}
+.sidebar-logout-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  color: var(--red-color) !important;
+  font-weight: 600;
+}
+.sidebar-logout-link svg {
+  font-size: 20px;
+}
+.sidebar-logout-link:hover {
+  background: #fef2f2;
+}
+
+/* ====== RESPONSIVE – sliding behaviour ====== */
+@media (max-width: 1024px) {
+  .admin-dashboard-sidebar.tablet-sidebar,
+  .admin-dashboard-sidebar.mobile-sidebar {
+    transform: translateX(-100%);
+  }
+  .admin-dashboard-sidebar.tablet-sidebar.sidebar-open,
+  .admin-dashboard-sidebar.mobile-sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-sidebar.mobile-sidebar {
+    width: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard-sidebar.mobile-sidebar {
+    width: 240px;
+  }
 }
