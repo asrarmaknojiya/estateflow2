@@ -14,10 +14,13 @@
 }
 
 .login-section {
-    padding: 50px;
+    padding: 25px;
     background-color: var(--white-color);
     border-radius: 12px;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+    width: 30%;
+    max-width: 500px;
+   
 }
 
 .login-heading h5 {
@@ -30,6 +33,7 @@
 
 .login-input {
     margin: 15px 0;
+    min-width: 170px;
 }
 
 .login-input input {
@@ -52,4 +56,15 @@
 .login-button button {
     width: 100%;
 
+}
+
+@media screen and (max-width: 770px) {
+  .login-section {
+    width: 50%;
+}
+}
+@media screen and (max-width: 430px) {
+  .login-section {
+    width: 70%;
+}
 }
