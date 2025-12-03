@@ -140,7 +140,6 @@ const Sidebar = () => {
                 <span>Properties</span>
               </NavLink>
             </li>
-            <li></li>
             <li>
               <NavLink to="/admin/product" onClick={handleNavClick}>
                 <RiProductHuntLine />
