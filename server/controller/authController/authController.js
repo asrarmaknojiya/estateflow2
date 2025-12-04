@@ -11,12 +11,11 @@ const jwt = require("jsonwebtoken");
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  // grab IP + Agent
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const agent = req.headers["user-agent"];
 
   connection.query(
-    "SELECT * FROM users WHERE email = ? LIMIT 1",
+    `SELECT * FROM users WHERE email = ?`,
     [email],
     (err, rows) => {
       if (err) return res.status(500).json({ error: "DB error" });
@@ -24,6 +23,12 @@ const login = (req, res) => {
         return res.status(404).json({ error: "User not found" });
 
       const user = rows[0];
+
+      if (user.status === "block")
+        return res.status(403).json({ error: "Your account is blocked" });
+
+      if (user.status === "trash")
+        return res.status(403).json({ error: "your account is in trash" });
 
       if (!bcrypt.compareSync(password, user.password))
         return res.status(400).json({ error: "Wrong password" });
@@ -40,7 +45,6 @@ const login = (req, res) => {
           return res.status(500).json({ error: "Role fetch error" });
 
         const roles = rRows.map((r) => r.name);
-
         const userPayload = { id: user.id, email: user.email, roles };
 
         const accessToken = generateAccessToken(userPayload);
@@ -69,6 +73,8 @@ const login = (req, res) => {
   );
 };
 
+
+
 // ---------------- REFRESH ----------------
 const refreshAccessToken = (req, res) => {
   const { refreshToken } = req.body;
@@ -80,7 +86,7 @@ const refreshAccessToken = (req, res) => {
     SELECT * FROM active_tokens
     WHERE refresh_token = ? AND is_blacklisted = 0
     LIMIT 1
-  `;
+    `;
 
   connection.query(sql, [refreshToken], (err, rows) => {
     if (err) return res.status(500).json({ error: "DB error" });
@@ -119,11 +125,11 @@ const refreshAccessToken = (req, res) => {
 
       const upd = `
         UPDATE active_tokens SET 
-          access_token = ?, 
-          access_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE),
-          last_activity = NOW()
+          access_token = ?,
+    access_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE),
+    last_activity = NOW()
         WHERE refresh_token = ?
-      `;
+    `;
 
       connection.query(upd, [newAccess, refreshToken], () => {
         return res.json({ accessToken: newAccess });
@@ -149,7 +155,7 @@ const me = (req, res) => {
 
   const userSQL = `
     SELECT id, name, email FROM users WHERE id = ? LIMIT 1
-  `;
+    `;
 
   connection.query(userSQL, [id], (err, rows) => {
     if (err) return res.status(500).json({ error: "DB error" });
@@ -176,5 +182,7 @@ const me = (req, res) => {
   });
 };
 
+
+
+
 module.exports = { login, refreshAccessToken, logout, me };
-    

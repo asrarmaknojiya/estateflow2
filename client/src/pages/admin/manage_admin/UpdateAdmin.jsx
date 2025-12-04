@@ -28,6 +28,22 @@ const EditAdmin = () => {
 
   const [submitting, setSubmitting] = useState(false);
 
+  // 🔒 allowed file types (frontend check)
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  const handleProfileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, PNG, and WEBP images are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    setProfileFile(file);
+  };
+
   useEffect(() => {
     if (!admin) {
       navigate("/admin/manage-clients");
@@ -37,7 +53,6 @@ const EditAdmin = () => {
     setName(admin.name || "");
     setEmail(admin.email || "");
     setPhoneNumber(admin.number || "");
-    setStatus(admin.img || "");
     setStatus(admin.status || "active");
 
     const fetchRolesAndUserRoles = async () => {
@@ -294,12 +309,8 @@ const EditAdmin = () => {
                     type="file"
                     id="editImageInputFile"
                     style={{ display: "none" }}
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setProfileFile(e.target.files[0]);
-                      }
-                    }}
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={handleProfileChange}
                   />
                 </div>
               </div>

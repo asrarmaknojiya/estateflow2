@@ -1,16 +1,18 @@
 // src/pages/admin/manage/ManageAdmin.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
+import {
+  HiOutlineArrowLeft,
+  HiOutlineArrowRight,
+} from "react-icons/hi";
 import { IoIosEye } from "react-icons/io";
 import { MdDeleteForever } from "react-icons/md";
 import { IoPencil } from "react-icons/io5";
+import { TbTrashOff } from "react-icons/tb";
 
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
-
-// axios instance
 import api from "../../../api/axiosInstance";
 
 // styles + CommonCard
@@ -21,25 +23,25 @@ const PAGE_SIZE = 5;
 
 const ManageAdmin = () => {
   const [admins, setAdmins] = useState([]);
+  const [rolesMap, setRolesMap] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // tabs: "All" | "Trash"
   const [activeTab, setActiveTab] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // userId -> "role1, role2"
-  const [rolesMap, setRolesMap] = useState({});
-
   const navigate = useNavigate();
 
-  /* ===================== FETCH ALL USERS + ROLES ===================== */
   useEffect(() => {
-    const fetchAdminsAndRoles = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-
+        // fetch users
         const usersRes = await api.get("/users");
         const users = Array.isArray(usersRes.data) ? usersRes.data : [];
         setAdmins(users);
 
+        // fetch user_roles
         const rolesRes = await api.get("/user-roles");
         const mappings = Array.isArray(rolesRes.data) ? rolesRes.data : [];
 
@@ -55,23 +57,56 @@ const ManageAdmin = () => {
         Object.keys(map).forEach((uid) => {
           map[uid] = map[uid].join(", ");
         });
-
         setRolesMap(map);
       } catch (err) {
-        console.error("Failed to fetch admins / roles:", err);
+        console.error("Error loading admins:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAdminsAndRoles();
+    loadData();
   }, []);
 
-  /* ===================== DELETE USER ===================== */
-  const handleDelete = async (id) => {
-    const allow = window.confirm("Are you sure you want to delete this admin?");
-    if (!allow) return;
+  /* ================= Trash / restore / delete flows ================= */
+  const moveToTrash = async (id) => {
+    try {
+      await api.put(`/trash-user/${id}`, { status: "trash" });
+      // optimistic update
+      setAdmins((prev) => prev.map((u) => (u.id === id ? { ...u, status: "trash" } : u)));
+      alert("User moved to trash");
+    } catch (err) {
+      console.error("moveToTrash error:", err);
+      alert("Failed to move to trash");
+    }
+  };
 
+  const restoreUser = async (id) => {
+    try {
+      await api.put(`/trash-user/${id}`, { status: "active" });
+      setAdmins((prev) => prev.map((u) => (u.id === id ? { ...u, status: "active" } : u)));
+      alert("User restored");
+    } catch (err) {
+      console.error("restoreUser error:", err);
+      alert("Failed to restore user");
+    }
+  };
+
+  const deleteUserForever = async (id) => {
+    if (!window.confirm("Delete permanently?")) return;
+    try {
+      await api.delete(`/users/${id}`);
+      setAdmins((prev) => prev.filter((u) => u.id !== id));
+      alert("User deleted permanently");
+    } catch (err) {
+      console.error("deleteUserForever error:", err);
+      alert("Failed to delete user");
+    }
+  };
+
+  /* ===================== Desktop delete (original) ===================== */
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this admin?")) return;
     try {
       await api.delete(`/users/${id}`);
       setAdmins((prev) => prev.filter((u) => u.id !== id));
@@ -93,22 +128,16 @@ const ManageAdmin = () => {
     navigate("/admin/view-client", { state: { admin } });
   };
 
-  /* ===================== FILTER BY TABS ===================== */
+  /* ===================== Filtering + Pagination ===================== */
   const filteredAdmins = admins.filter((admin) => {
-    if (activeTab === "All") return true;
-    if (activeTab === "Active") return admin.status === "active";
-    if (activeTab === "Blocked")
-      return admin.status === "block" || admin.status === "blocked";
+    if (activeTab === "All") return admin.status !== "trash";
+    if (activeTab === "Trash") return admin.status === "trash";
     return true;
   });
 
-  /* ===================== PAGINATION ===================== */
   const totalPages = Math.max(1, Math.ceil(filteredAdmins.length / PAGE_SIZE));
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const paginatedAdmins = filteredAdmins.slice(
-    startIndex,
-    startIndex + PAGE_SIZE
-  );
+  const paginatedAdmins = filteredAdmins.slice(startIndex, startIndex + PAGE_SIZE);
 
   const changePage = (p) => {
     if (p >= 1 && p <= totalPages) setCurrentPage(p);
@@ -127,6 +156,7 @@ const ManageAdmin = () => {
 
   const getStatusClass = (status) => {
     if (status === "active") return "status published";
+    if (status === "trash") return "status out-of-stock";
     if (status === "block" || status === "blocked") return "status out-of-stock";
     return "status";
   };
@@ -134,6 +164,7 @@ const ManageAdmin = () => {
   const getStatusLabel = (status) => {
     if (!status) return "-";
     if (status === "block") return "Blocked";
+    if (status === "trash") return "Trash";
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
@@ -144,18 +175,16 @@ const ManageAdmin = () => {
       <main className="admin-panel-header-div">
         <Breadcrumb
           title="Clients"
-          breadcrumbText="clients List"
+          breadcrumbText="Clients List"
           button={{ link: "/admin/add-new_client", text: "Add New Client" }}
         />
 
         {/* TABS */}
         <div className="admin-panel-header-tabs" style={{ marginTop: 12 }}>
-          {["All", "Active", "Blocked"].map((tab) => (
+          {["All", "Trash"].map((tab) => (
             <button
               key={tab}
-              className={`admin-panel-header-tab ${
-                activeTab === tab ? "active" : ""
-              }`}
+              className={`admin-panel-header-tab ${activeTab === tab ? "active" : ""}`}
               onClick={() => {
                 setActiveTab(tab);
                 setCurrentPage(1);
@@ -169,30 +198,24 @@ const ManageAdmin = () => {
         {/* TABLE / CARD container */}
         <div className="dashboard-table-container" style={{ marginTop: 18 }}>
           {loading ? (
-            <p>Loading users...</p>
+            <p>Loading...</p>
           ) : (
             <>
               {/* CARD-LIST (visible on tablet/mobile via CSS) */}
               <div className="card-list" aria-hidden={false}>
                 {paginatedAdmins.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: 16 }}>
-                    No admins found
-                  </div>
+                  <div style={{ textAlign: "center", padding: 16 }}>No admins found</div>
                 ) : (
                   paginatedAdmins.map((user) => {
                     const avatar = user.img ? `/uploads/${user.img}` : null;
-
-                    // show first name only
-                    const firstName =
-                      (user.name && user.name.split(" ").filter(Boolean)[0]) || "-";
-
+                    const firstName = (user.name && user.name.split(" ").filter(Boolean)[0]) || "-";
                     return (
                       <CommonCard
                         key={user.id}
                         avatar={avatar}
                         title={firstName}
                         meta={user.number || "-"}
-                        onClick={() => handleEdit(user)} // tap to edit/view per your flow
+                        onClick={() => handleEdit(user)}
                         compact={true}
                       />
                     );
@@ -228,33 +251,73 @@ const ManageAdmin = () => {
                           <img src={`/uploads/${user.img}`} alt="profile" />
                           <span>{user.name || "-"}</span>
                         </td>
+
                         <td>{user.email || "-"}</td>
                         <td>{user.number || "-"}</td>
                         <td>{rolesMap[user.id] || "-"}</td>
+
                         <td>
                           <span className={getStatusClass(user.status)}>
                             {getStatusLabel(user.status)}
                           </span>
                         </td>
+
                         <td>{formatDate(user.created_at)}</td>
 
-                        {/* DESKTOP ACTIONS - keep edit/view/delete icons */}
+                        {/* DESKTOP ACTIONS - vary by tab */}
                         <td className="actions">
-                          <IoPencil
-                            title="Edit"
-                            style={{ cursor: "pointer", marginRight: 10 }}
-                            onClick={() => handleEdit(user)}
-                          />
-                          <IoIosEye
-                            title="View"
-                            style={{ cursor: "pointer", marginRight: 10 }}
-                            onClick={() => handleView(user)}
-                          />
-                          <MdDeleteForever
-                            title="Delete"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleDelete(user.id)}
-                          />
+                          {activeTab === "All" && (
+                            <>
+                              <IoPencil
+                                title="Edit"
+                                style={{ cursor: "pointer", marginRight: 10 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(user);
+                                }}
+                              />
+                              <IoIosEye
+                                title="View"
+                                style={{ cursor: "pointer", marginRight: 10 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleView(user);
+                                }}
+                              />
+                              {/* move to trash */}
+                              <MdDeleteForever
+                                title="Trash"
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveToTrash(user.id);
+                                }}
+                              />
+                            </>
+                          )}
+
+                          {activeTab === "Trash" && (
+                            <>
+                              {/* restore */}
+                              <TbTrashOff
+                                title="Restore"
+                                style={{ cursor: "pointer", marginRight: 10 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  restoreUser(user.id);
+                                }}
+                              />
+                              {/* delete permanently */}
+                              <MdDeleteForever
+                                title="Delete forever"
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteUserForever(user.id);
+                                }}
+                              />
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -266,18 +329,12 @@ const ManageAdmin = () => {
               <div className="table-footer-pagination">
                 <span>
                   Showing {filteredAdmins.length === 0 ? 0 : startIndex + 1}-
-                  {Math.min(startIndex + PAGE_SIZE, filteredAdmins.length)} from{" "}
+                  {Math.min(startIndex + PAGE_SIZE, filteredAdmins.length)} of{" "}
                   {filteredAdmins.length}
                 </span>
 
                 <ul className="pagination">
-                  <li
-                    className="arrow"
-                    onClick={() => changePage(currentPage - 1)}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="prev-page"
-                  >
+                  <li onClick={() => changePage(currentPage - 1)} role="button" tabIndex={0}>
                     <HiOutlineArrowLeft />
                   </li>
 
@@ -294,13 +351,7 @@ const ManageAdmin = () => {
                     </li>
                   ))}
 
-                  <li
-                    className="arrow"
-                    onClick={() => changePage(currentPage + 1)}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="next-page"
-                  >
+                  <li onClick={() => changePage(currentPage + 1)} role="button" tabIndex={0}>
                     <HiOutlineArrowRight />
                   </li>
                 </ul>

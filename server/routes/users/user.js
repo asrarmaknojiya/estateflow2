@@ -5,6 +5,7 @@ const users = require("../../controller/users/user");
 const upload = require("../../middleware/fileHandler");
 const verifyToken = require("../../middleware/verifyToken");
 const checkPermission = require("../../middleware/checkPermission");
+const authorizeRole = require("../../middleware/authorizeRole");
 
 // GET all users
 router.get(
@@ -40,6 +41,8 @@ router.put(
   users.updateUser
 );
 
+router.put('/trash-user/:id', verifyToken,  checkPermission("update_user"), users.trashUser);
+
 // DELETE user
 router.delete(
   "/users/:id",
@@ -47,5 +50,7 @@ router.delete(
   checkPermission("delete_user"),
   users.deleteUser
 );
+
+
 
 module.exports = router;

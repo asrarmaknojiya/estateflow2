@@ -69,73 +69,65 @@ const addUser = (req, res) => {
 };
 
 // -------------------- UPDATE USER --------------------
+
+
 const updateUser = (req, res) => {
-  const loggedInUserId = req.user.id;
-  const loggedInUserRole = req.user.roles; // array e.g ["admin"] or ["buyer"]
-  const isAdmin = loggedInUserRole.includes("admin");
+  const loggedInUserId = Number(req.user.id);
+  const loggedInUserRoles = req.user.roles || ""; 
+  const isAdmin = loggedInUserRoles.includes("admin");
 
-  const { id } = req.params;
+  const targetUserId = Number(req.params.id);
 
-  // ❌ Non-admin cannot update others
-  if (!isAdmin && Number(id) !== Number(loggedInUserId)) {
+  // ---- 1) PERMISSION CHECKS ----
+
+  // Non-admin → sirf apna profile update kar sakta hai
+  if (!isAdmin && targetUserId !== loggedInUserId) {
     return res.status(403).json({
       error: "You can only update your own profile",
     });
   }
 
-  // ❌ Non-admin cannot modify ROLE fields
-  if (req.body.role_id || req.body.roles || req.body.role) {
-    if (!isAdmin) {
-      return res.status(403).json({
-        error: "Only admin can change roles",
-      });
-    }
+  // Non-admin roles change nahi kar sakta
+  if (!isAdmin && (req.body.role_id || req.body.roles || req.body.role)) {
+    return res.status(403).json({
+      error: "Only admin can change roles",
+    });
   }
 
-  const { name, email, number, alt_number, password, status, address } =
-    req.body;
+  // ---- 2) BODY SE DATA NIKAL LO ----
 
-  const img = req.file ? req.file.filename : null; // sirf naya file aaye to hi value
+  const {
+    name,
+    email,
+    number,
+    alt_number,
+    password,
+    status,
+    address,
+  } = req.body;
 
-  const onlyPassword =
-    password &&
-    password.trim() !== "" &&
-    !name &&
-    !email &&
-    !number &&
-    !alt_number &&
-    !status &&
-    !address &&
-    !img;
+  const img = req.file ? req.file.filename : null;
+  const hasPassword = password && password.trim() !== "";
 
-  // ----------------- CASE 1: password change -----------------
-  if (password && password.trim() !== "") {
-    bcrypt.hash(password, SALT_ROUNDS, (hashErr, hashedPassword) => {
-      if (hashErr) return res.status(500).json({ error: "hash error" });
-
-      // ✅ A. Sirf password update
-      if (onlyPassword) {
-        const q = "UPDATE users SET password = ? WHERE id = ?";
-        connection.query(q, [hashedPassword, id], (err, result) => {
-          if (err) {
-            return res
-              .status(500)
-              .json({ error: "database error", details: err });
-          }
-          if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "not found" });
-          }
-          return res.status(200).json({ message: "password updated" });
-        });
-        return;
+  // ---- 3) CASE A: PASSWORD BHI CHANGE HOGA ----
+  if (hasPassword) {
+    return bcrypt.hash(password, SALT_ROUNDS, (hashErr, hashedPassword) => {
+      if (hashErr) {
+        console.error("HASH ERROR:", hashErr);
+        return res.status(500).json({ error: "hash error" });
       }
 
-      // ✅ B. Password + baaki fields
       const q = `
         UPDATE users 
-        SET name = ?, email = ?, number = ?, alt_number = ?, 
-            password = ?, status = ?, address = ?, 
-            img = COALESCE(?, img)
+        SET 
+          name       = ?,
+          email      = ?,
+          number     = ?,
+          alt_number = ?,
+          password   = ?,
+          status     = ?,
+          address    = ?,
+          img        = COALESCE(?, img)
         WHERE id = ?
       `;
 
@@ -147,26 +139,37 @@ const updateUser = (req, res) => {
         hashedPassword,
         status || null,
         address || null,
-        img,      // ⚠️ agar null hoga to COALESCE old img use karega
-        id,
+        img,               // null hua to COALESCE purana img rakhega
+        targetUserId,
       ];
 
       connection.query(q, params, (err, result) => {
-        if (err) return res.status(500).json({ error: "database error" });
+        if (err) {
+          console.error("UPDATE (with password) ERROR:", err);
+          return res.status(500).json({ error: "database error", details: err });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ error: "not found" });
+        }
 
         return res.status(200).json({ message: "updated" });
       });
     });
-
-    return;
   }
 
-  // Password not provided → update normally
+ 
+
   const q = `
     UPDATE users 
-    SET name = ?, email = ?, number = ?, alt_number = ?, 
-        status = ?, address = ?, 
-        img = COALESCE(?, img)
+    SET 
+      name       = ?,
+      email      = ?,
+      number     = ?,
+      alt_number = ?,
+      status     = ?,
+      address    = ?,
+      img        = COALESCE(?, img)
     WHERE id = ?
   `;
 
@@ -177,32 +180,24 @@ const updateUser = (req, res) => {
     alt_number || null,
     status || null,
     address || null,
-    img,      // 🟢 yaha bhi COALESCE use karega: null → old img
-    id,
+    img,               // null => purana img rahega
+    targetUserId,
   ];
 
   connection.query(q, params, (err, result) => {
-    if (err) return res.status(500).json({ error: "database error" });
+    if (err) {
+      console.error("UPDATE (no password) ERROR:", err);
+      return res.status(500).json({ error: "database error", details: err });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "not found" });
+    }
 
     return res.status(200).json({ message: "updated" });
   });
 };
 
-// -------------------- DELETE USER --------------------
-// const deleteUser = (req, res) => {
-//   const { id } = req.params;
-
-//   // Remove role assignment first
-//   connection.query("DELETE FROM users_roles WHERE user_id=?", [id], () => {
-//     connection.query("DELETE FROM users WHERE id=?", [id], (err, result) => {
-//       if (err) return res.status(500).json({ error: "database error" });
-
-//       return res.status(200).json({
-//         message: "user deleted + role mappings removed",
-//       });
-//     });
-//   });
-// };
 
 const deleteUser = (req, res) => {
   const { id } = req.params;
@@ -268,12 +263,24 @@ const deleteUser = (req, res) => {
   });
 };
 
+const trashUser = (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
 
+  connection.query("UPDATE users SET status =? WHERE id =? ", [status, id], (err, result) => {
+    if (err) {
+      return res.status(500);
+    } else {
+      return res.json(result)
+    }
+  });
+};
 
 module.exports = {
   getUsers,
   getUserById,
   addUser,
   updateUser,
+  trashUser,
   deleteUser,
 };
