@@ -1,7 +1,12 @@
 /* src/components/common-card.css
    Uses variables from your main.css (:root)
+   - Title color uses --primary-btn-bg
+   - Meta color uses --primary-font-color
+   - Title/meta vertically spaced (top & bottom)
+   - Prevent glyph clipping (proper line-height & visible overflow)
 */
 
+/* base card */
 .common-card {
   display: flex;
   align-items: center;
@@ -23,7 +28,7 @@
 .common-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  border-color: rgba(56,88,214,0.12); /* soft accent using primary btn */
+  border-color: rgba(56,88,214,0.12);
 }
 .common-card:active {
   transform: translateY(0);
@@ -69,29 +74,43 @@
   background: linear-gradient(135deg, #f0f1f3 0%, #e8e9ec 100%);
 }
 
-/* center body */
+/* body: vertical layout with top & bottom alignment
+   - min-height matches avatar to ensure top/bottom touching
+*/
 .common-card__body {
-  flex: 1 1 auto;
-  min-width: 0; /* allow truncation */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* title at top, meta at bottom */
+  min-width: 0;                   /* allow truncation */
+  min-height: 56px;               /* match avatar default so items touch top/bottom */
+  padding-top: 2px;
+  padding-bottom: 2px;
+  box-sizing: border-box;
 }
 
-/* title */
+/* Title (blue) */
 .common-card__title {
   font-family: var(--secondary-font);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
-  color: #15171a;
-  line-height: 1;
-  white-space: nowrap;
+  color: var(--primary-btn-bg);   /* blue title */
+  line-height: 1.15;              /* prevents clipping of descenders (g, y, etc) */
+  margin: 0;
+  white-space: normal;            /* allow wrapping if very long */
   overflow: hidden;
   text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;          /* allow up to 2 lines before ellipsis */
+  -webkit-box-orient: vertical;
 }
 
-/* subtitle */
-.common-card__subtitle {
+/* Meta (grey) - sits at the bottom of the card body */
+.common-card__meta {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--primary-font-color); /* grey meta */
   margin-top: 6px;
-  font-size: 13px;
-  color: var(--primary-font-color);
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -105,15 +124,6 @@
   flex-shrink: 0;
 }
 
-/* meta text (phone/price/etc) */
-.common-card__meta {
-  font-weight: 600;
-  font-size: 14px;
-  color: #191c1f;
-  min-width: 0;
-  white-space: nowrap;
-}
-
 /* chevron style */
 .common-card__chev {
   display: flex;
@@ -123,19 +133,18 @@
   opacity: 0.85;
 }
 
-/* make chevron more subtle */
+/* chevron svg */
 .common-card__chev svg {
   display: block;
+  width: 18px;
+  height: 18px;
 }
 
 /* -------------------------------------------------
    Responsive rules
-   - Desktop default
-   - Tablet: slightly larger paddings, avatar same
-   - Mobile: compact layout
 --------------------------------------------------*/
 
-/* Tablet */
+/* Tablet adjustments */
 @media (min-width: 768px) and (max-width: 1024px) {
   .common-card {
     padding: 16px 18px;
@@ -147,6 +156,10 @@
     height: 60px;
   }
 
+  .common-card__body {
+    min-height: 60px;
+  }
+
   .common-card__title {
     font-size: 17px;
   }
@@ -156,7 +169,7 @@
   }
 }
 
-/* Mobile: stack-friendly, tighter spacing */
+/* Mobile: tighter spacing but keep vertical top/bottom alignment */
 @media (max-width: 767px) {
   .common-card {
     padding: 10px 12px;
@@ -169,8 +182,15 @@
     height: 44px;
   }
 
+  .common-card__body {
+    min-height: 44px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   .common-card__title {
     font-size: 15px;
+    -webkit-line-clamp: 2;
   }
 
   .common-card__subtitle {
@@ -181,10 +201,10 @@
     font-size: 13px;
   }
 
-  /* if you need an ultra-compact look */
   .common-card--compact {
     padding: 8px 10px;
     gap: 8px;
+    min-height: 44px;
   }
 }
 

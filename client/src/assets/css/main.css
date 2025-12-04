@@ -231,7 +231,6 @@ button {
   background: var(--white-color);
   border-radius: 8px;
   padding: 4px;
-  margin-top: 18px;
   width: fit-content;
 }
 
