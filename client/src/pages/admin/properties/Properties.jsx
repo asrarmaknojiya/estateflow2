@@ -224,7 +224,7 @@ const Properties = () => {
             <div className="card-list">
               {paginated.length > 0 ? (
                 paginated.map((p) => (
-                  <CommonCard key={p.id} avatar={p.image ? `/uploads/${p.image}` : null} title={p.title} subtitle={p.address} meta={`₹${p.price}`} onClick={() => openDetails(p)} compact />
+                  <CommonCard key={p.id} avatar={p.image ? `/uploads/${p.image}` : null} title={p.title} meta={p.address} onClick={() => openDetails(p)} compact />
                 ))
               ) : (
                 <div className="ma-empty">No properties found</div>

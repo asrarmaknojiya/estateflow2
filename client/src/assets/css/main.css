@@ -174,7 +174,7 @@ button {
   font-family: var(--info-font);
   background-color: var(--light-white-color);
   width: 100%;
-  padding: 16px 24px 24px 24px;
+  padding: 16px 14px 24px 14px;
   position: fixed;
   height: calc(100vh - var(--navbar-height));  /* Dynamic */
   left: 0;

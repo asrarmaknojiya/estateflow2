@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { RxDashboard } from "react-icons/rx";
-import { RiAdminLine, RiCoupon2Line, RiProductHuntLine } from "react-icons/ri";
+import { RiAdminLine,RiProductHuntLine } from "react-icons/ri";
 import { FiLogOut, FiX } from "react-icons/fi";
-import { IoGiftOutline } from "react-icons/io5";
-import { MdOutlineCategory } from "react-icons/md";
+import { CgProfile } from "react-icons/cg";
+
+
 import "../../../assets/css/admin/sidebar.css";
 
 const Sidebar = () => {
@@ -150,6 +151,12 @@ const Sidebar = () => {
               <NavLink to="/admin/manage-clients" onClick={handleNavClick}>
                 <RiAdminLine />
                 <span>Clients</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/profile" onClick={handleNavClick}>
+                <CgProfile />
+                <span>My Profile</span>
               </NavLink>
             </li>
           </ul>
