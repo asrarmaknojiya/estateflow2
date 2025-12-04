@@ -15,7 +15,7 @@ const login = (req, res) => {
   const agent = req.headers["user-agent"];
 
   connection.query(
-   ` SELECT * FROM users WHERE email = ?`,
+    `SELECT * FROM users WHERE email = ?`,
     [email],
     (err, rows) => {
       if (err) return res.status(500).json({ error: "DB error" });
@@ -72,6 +72,8 @@ const login = (req, res) => {
     }
   );
 };
+
+
 
 // ---------------- REFRESH ----------------
 const refreshAccessToken = (req, res) => {

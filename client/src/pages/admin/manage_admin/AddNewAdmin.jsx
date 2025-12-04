@@ -6,7 +6,6 @@ import { HiXMark } from "react-icons/hi2";
 import { IoMdArrowDropright } from "react-icons/io";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
-// ⬇️ use axios instance instead of axios + baseURL
 import api from "../../../api/axiosInstance";
 
 const AddNewAdmin = () => {
@@ -24,6 +23,22 @@ const AddNewAdmin = () => {
   const [roles, setRoles] = useState([]);
   const [selectedRoleIds, setSelectedRoleIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // 🔒 allowed file types (frontend check)
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  const handleProfileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, PNG, and WEBP images are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    setProfileFile(file);
+  };
 
   // fetch roles (simple, now via api instance)
   useEffect(() => {
@@ -256,12 +271,8 @@ const AddNewAdmin = () => {
                     id="imageInputFile"
                     name="img"
                     style={{ display: "none" }}
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setProfileFile(e.target.files[0]);
-                      }
-                    }}
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={handleProfileChange}
                   />
                 </div>
               </div>
