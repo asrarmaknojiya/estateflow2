@@ -89,7 +89,7 @@ const ManageAdmin = () => {
   };
 
   const handleEdit = (admin) => navigate("/admin/edit-client", { state: { admin } });
-  const handleView = (admin) => navigate("/admin/view-client", { state: { admin } });
+  const handleView = (admin) => navigate("/admin/user-dashboard", { state: { admin } });
 
   /* filter + search */
   const filteredAdmins = admins.filter((admin) => {
@@ -243,10 +243,8 @@ const ManageAdmin = () => {
                           {activeTab === "All" ? (
                             <>
                               <IoPencil onClick={() => handleEdit(user)} />
-                              <NavLink to={"/admin/user-dashboard"}>
 
-                                <IoIosEye  />
-                              </NavLink>
+                              <IoIosEye onClick={() => handleView(user)} />
                               <MdDeleteForever onClick={() => moveToTrash(user.id)} />
                             </>
                           ) : (

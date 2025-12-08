@@ -13,28 +13,37 @@
 }
 
 .dashboard-info-card {
- 
-  background-repeat: no-repeat; 
+
+  background-repeat: no-repeat;
   border-radius: 12px;
   padding: 20px 20px 10px 20px;
   box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.dashboard-info-card-purchase{
- background-color: #FDF5EC;
- background-image: url(../../../image/purchaseBackground.png);
+
+.dashboard-info-card-purchase {
+  background-color: #FDF5EC;
+  background-image: url(../../../image/purchaseBackground.png);
 }
-.dashboard-info-card-sale{
+
+.dashboard-info-card-sale {
   background-color: #E9F4FF;
-   background-image: url(../../../image/saleBackground.png);
+  background-image: url(../../../image/saleBackground.png);
 }
-.dashboard-info-card-inventory{
+
+.dashboard-info-card-inventory {
   background-color: #F5E9FF;
-   background-image: url(../../../image/inventoryBackground.png);
+  background-image: url(../../../image/inventoryBackground.png);
 }
-.dashboard-info-card-broker{
+
+.dashboard-info-card-broker {
   background-color: #ECFFF3;
-   background-image: url(../../../image/brokerBackground.png);
+  background-image: url(../../../image/brokerBackground.png);
+}
+
+.dashboard-info-card-profile {
+  background-color: #ECECEC;
+  background-image: url(../../../image/profileBackground.png);
 }
 
 .dashboard-info-card:hover {
@@ -142,6 +151,5 @@
     margin-bottom: 14px;
   }
 
- 
-}
 
+}
