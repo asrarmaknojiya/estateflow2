@@ -97,7 +97,7 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Profile</h6>
                                 <p>You can see your Account or you can edit the profile if you want.</p>
-                                <button className="card-action-btn" onClick={() => handleEdit(user)}>VIEW DETAILS</button>
+                                <button className="card-action-btn" onClick={() => handleEdit(admin)}>VIEW DETAILS</button>
                             </div>
                             <div className="card-icon-section" >
                                 <div className="icon-wrapper" >

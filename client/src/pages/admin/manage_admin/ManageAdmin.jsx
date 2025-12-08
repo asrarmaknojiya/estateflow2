@@ -193,7 +193,7 @@ const ManageAdmin = () => {
                         avatar={avatar}
                         title={firstName}
                         meta={user.number || "-"}
-                        onClick={() => handleEdit(user)}
+                        onClick={() => handleView(user)}
                         compact
                       />
                     );
