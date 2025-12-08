@@ -22,6 +22,7 @@ import EditProperty from "../../pages/admin/properties/UpdateProperties";
 import LogoutPage from "../../pages/admin/login/Logout";
 import UserDashboard from "../../pages/admin/manage_admin/UserDashboard";
 import MyProfile from "../../pages/admin/my_profile/MyProfile";
+import TrashClients from "../../pages/admin/trash/TrashClient";
 
 const DashboardRoute = () => {
   return (
@@ -48,6 +49,7 @@ const DashboardRoute = () => {
         <Route path="/admin/create-coupon" element={<CreateCoupon />} />
         <Route path="/admin/add-new_client" element={<AddNewAdmin />} />
         <Route path="/admin/edit-client" element={<EditAdmin />} />
+        <Route path="/admin/trash-clients" element={<TrashClients />} />
         <Route path="/admin/user-dashboard" element={<UserDashboard />} />
         <Route path="/admin/profile" element={<MyProfile />} />
         <Route path="/logout" element={<LogoutPage />} />

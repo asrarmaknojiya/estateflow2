@@ -5,6 +5,8 @@ import { RxDashboard } from "react-icons/rx";
 import { RiAdminLine,RiProductHuntLine } from "react-icons/ri";
 import { FiLogOut, FiX } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
+import { FaTrashArrowUp } from "react-icons/fa6";
+
 
 
 import "../../../assets/css/admin/sidebar.css";
@@ -157,6 +159,12 @@ const Sidebar = () => {
               <NavLink to="/admin/profile" onClick={handleNavClick}>
                 <CgProfile />
                 <span>My Profile</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/trash-clients" onClick={handleNavClick}>
+                <FaTrashArrowUp />
+                <span>Trash</span>
               </NavLink>
             </li>
           </ul>
