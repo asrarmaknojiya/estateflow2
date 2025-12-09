@@ -6,7 +6,7 @@ import Sidebar from '../layout/Sidebar';
 import purchaseSide from "../../../assets/image/purchaseSide.png";
 import saleSide from "../../../assets/image/saleSide.png";
 import inventorySide from "../../../assets/image/inventorySide.png";
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import {Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { HiOutlineArrowLeft } from 'react-icons/hi';
 import { FiMenu } from 'react-icons/fi';
 
@@ -94,7 +94,9 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Broker</h6>
                                 <p>You can see your Account or you can edit the profile if you want.</p>
+                                <NavLink to={'/admin/salescard'}>
                                 <button className="card-action-btn">VIEW DETAILS</button>
+                                </NavLink>
                             </div>
                             <div className="card-icon-section" >
                                 <div className="icon-wrapper" >

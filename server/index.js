@@ -14,7 +14,7 @@ dotenv.config();
 const port = process.env.PORT || 4500;
 const app = express();
 
-// ⭐ Simple clean CORS
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -47,3 +47,26 @@ setInterval(() => {
   blacklistExpiredTokens();
   deleteOldBlacklistedTokens();
 }, 60 * 60 * 1000);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
