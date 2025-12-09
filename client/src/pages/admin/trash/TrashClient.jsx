@@ -1,3 +1,4 @@
+// src/pages/admin/TrashClients.jsx
 import React, { useEffect, useState } from "react";
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
 import { IoIosEye } from "react-icons/io";
@@ -9,7 +10,6 @@ import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import api from "../../../api/axiosInstance";
 import "../../../assets/css/admin/pages/mainLayout.css";
-import CommonCard from "../common/CommonCard";
 import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 5;
@@ -149,6 +149,7 @@ const TrashClients = () => {
             <p>Loading...</p>
           ) : (
             <>
+              {/* ---------- Responsive card list (mobile/tablet) ---------- */}
               <div className="card-list">
                 {paginated.length === 0 ? (
                   <div className="ma-empty">No admins in trash</div>
@@ -156,20 +157,82 @@ const TrashClients = () => {
                   paginated.map((user) => {
                     const avatar = user.img ? `/uploads/${user.img}` : null;
                     const firstName = user.name?.split(" ")[0] || "-";
+
                     return (
-                      <CommonCard
+                      <div
                         key={user.id}
-                        avatar={avatar}
-                        title={firstName}
-                        meta={user.number || "-"}
+                        className="common-card common-card--compact"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => handleEdit(user)}
-                        compact
-                      />
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleEdit(user);
+                        }}
+                        aria-label={`Edit ${user.name || "user"}`}
+                        style={{ marginBottom: 12 }}
+                      >
+                        <div className="common-card__left">
+                          <div className="common-card__avatar">
+                            {avatar ? (
+                              <img src={avatar} alt={user.name || "profile"} />
+                            ) : (
+                              <div className="common-card__avatar--placeholder" />
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="common-card__body">
+                          <div className="common-card__title">{firstName}</div>
+                          <div className="common-card__meta">{user.number || "-"}</div>
+                        </div>
+
+                        <div className="common-card__right">
+                          {/* Restore button */}
+                          <button
+                            type="button"
+                            title="Restore"
+                            aria-label={`Restore ${user.name || "user"}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              restoreUser(user.id);
+                            }}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: 6,
+                            }}
+                          >
+                            <TbTrashOff style={{ fontSize: 20, color: "var(--primary-btn-bg)" }} />
+                          </button>
+
+                          {/* Delete permanently */}
+                          <button
+                            type="button"
+                            title="Delete forever"
+                            aria-label={`Delete ${user.name || "user"} permanently`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteUserForever(user.id);
+                            }}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: 6,
+                              marginLeft: 8,
+                            }}
+                          >
+                            <MdDeleteForever style={{ fontSize: 20, color: "var(--red-color)" }} />
+                          </button>
+                        </div>
+                      </div>
                     );
                   })
                 )}
               </div>
 
+              {/* ---------- Desktop table ---------- */}
               <table>
                 <thead>
                   <tr>
@@ -209,8 +272,8 @@ const TrashClients = () => {
                         <td>{formatDate(user.created_at)}</td>
 
                         <td className="actions">
-                          <TbTrashOff onClick={() => restoreUser(user.id)} />
-                          <MdDeleteForever onClick={() => deleteUserForever(user.id)} />
+                          <TbTrashOff onClick={() => restoreUser(user.id)} style={{ cursor: "pointer" }} />
+                          <MdDeleteForever onClick={() => deleteUserForever(user.id)} style={{ cursor: "pointer" }} />
                         </td>
                       </tr>
                     ))
@@ -230,11 +293,7 @@ const TrashClients = () => {
                   </li>
 
                   {Array.from({ length: totalPages }).map((_, i) => (
-                    <li
-                      key={i}
-                      className={currentPage === i + 1 ? "active" : ""}
-                      onClick={() => changePage(i + 1)}
-                    >
+                    <li key={i} className={currentPage === i + 1 ? "active" : ""} onClick={() => changePage(i + 1)}>
                       {String(i + 1).padStart(2, "0")}
                     </li>
                   ))}
