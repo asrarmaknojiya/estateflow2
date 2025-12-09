@@ -4,7 +4,7 @@ import Sidebar from "../layout/Sidebar";
 import { useOutletContext } from "react-router-dom";
 
 const Dashboard = () => {
-  // const { me } = useOutletContext();
+  const { me } = useOutletContext();
   return (
     <>
       <Navbar />
@@ -12,8 +12,8 @@ const Dashboard = () => {
       <main className="admin-panel-header-div">
         <div>
           <h1>Dashboard</h1>
-          {/* <p>Hello {me.user.name}</p>
-          <p>Your roles: {me.roles.join(", ")}</p> */}
+          <p>Hello {me.user.name}</p>
+          <p>Your roles: {me.roles.join(", ")}</p>
         </div>
       </main>
     </>

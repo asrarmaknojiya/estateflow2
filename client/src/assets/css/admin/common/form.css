@@ -52,8 +52,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid var(--primary-border-color);
+  background: var(--primary-border-color);
   border-radius: 10px;
   color: #333;
   cursor: pointer;
@@ -78,7 +77,6 @@
   width: 40px;
   height: 40px;
   font-size: 20px;
-  border: 2px solid var(--primary-border-color);
   border-radius: 10px;
   color: var(--white-color);
   cursor: pointer;

@@ -6,6 +6,7 @@
 }
 
 .dashboard-cards-grid {
+  padding: 16px 14px 24px 14px;
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;

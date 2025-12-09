@@ -6,7 +6,9 @@ import Sidebar from '../layout/Sidebar';
 import purchaseSide from "../../../assets/image/purchaseSide.png";
 import saleSide from "../../../assets/image/saleSide.png";
 import inventorySide from "../../../assets/image/inventorySide.png";
-import { Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { HiOutlineArrowLeft } from 'react-icons/hi';
+import { FiMenu } from 'react-icons/fi';
 
 function UserDashboard() {
 
@@ -15,16 +17,27 @@ function UserDashboard() {
 
     const navigate = useNavigate()
 
-    const handleEdit = (admin) => navigate("/admin/edit-client", { state: { admin } });
-
+    const handleProfile = () => navigate("/admin/profile", { state: { admin } });
+    const handleHamburgerClick = () => {
+        if (window.toggleAdminSidebar) window.toggleAdminSidebar();
+    };
 
 
     return (
         <>
             <Sidebar />
-            <Navbar />
 
-            <div className="view-admin-container admin-panel-header-div">
+
+            <div className="view-admin-container admin-panel-header-div no-navbar">
+                <div className="add-form-header">
+                    <Link to="/admin/manage-clients" className="back-arrow-btn">
+                        <HiOutlineArrowLeft />
+                    </Link>
+                    <h5>Hello World</h5>
+                    <button className="form-hamburger-btn" onClick={handleHamburgerClick} aria-label="Toggle sidebar">
+                        <FiMenu />
+                    </button>
+                </div>
                 <div className="dashboard-cards-grid">
 
                     {/* Your Purchase Card */}
@@ -98,7 +111,7 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Profile</h6>
                                 <p>You can see your Account or you can edit the profile if you want.</p>
-                                <button className="card-action-btn" onClick={() => handleEdit(admin)}>VIEW DETAILS</button>
+                                <button className="card-action-btn" onClick={() => handleProfile(admin)}>VIEW DETAILS</button>
                             </div>
                             <div className="card-icon-section" >
                                 <div className="icon-wrapper" >

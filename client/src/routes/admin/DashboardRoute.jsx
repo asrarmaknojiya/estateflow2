@@ -22,15 +22,18 @@ import EditProperty from "../../pages/admin/properties/UpdateProperties";
 import LogoutPage from "../../pages/admin/login/Logout";
 import UserDashboard from "../../pages/admin/manage_admin/UserDashboard";
 import SalesCard from "../../pages/admin/cards/Sales";
+import MyProfile from "../../pages/admin/my_profile/MyProfile";
+import TrashClients from "../../pages/admin/trash/TrashClient";
 
 const DashboardRoute = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
+      <Route path="/login" element={<Navigate to="/admin/login" replace />} />
       <Route path="/admin/login" element={<Login />} />
 
 
-      {/* <Route element={<ProtectedRoute />}> */}
+      <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/product" element={<Product />} />
@@ -47,11 +50,13 @@ const DashboardRoute = () => {
         <Route path="/admin/create-coupon" element={<CreateCoupon />} />
         <Route path="/admin/add-new_client" element={<AddNewAdmin />} />
         <Route path="/admin/edit-client" element={<EditAdmin />} />
+        <Route path="/admin/trash-clients" element={<TrashClients />} />
         <Route path="/admin/user-dashboard" element={<UserDashboard />} />
         <Route path="/admin/salescard" element={<SalesCard />} />
 
+        <Route path="/admin/profile" element={<MyProfile />} />
         <Route path="/logout" element={<LogoutPage />} />
-      {/* </Route> */}
+      </Route>
     </Routes>
   );
 };
