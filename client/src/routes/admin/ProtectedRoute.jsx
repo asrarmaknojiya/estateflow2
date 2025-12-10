@@ -14,7 +14,7 @@ const ProtectedRoute = () => {
   useEffect(() => {
     const verify = async () => {
       try {
-        const res = await api.get("/me"); // ⭐ FIXED
+        const res = await api.get("/me"); 
         setMe(res.data);
       } catch (err) {
         localStorage.clear();

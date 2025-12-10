@@ -78,6 +78,11 @@
   color: var(--red-color);
 }
 
+.mobile-sticky-actions {
+  display: none;
+}
+
+
 /* Profile Content */
 .profile-content {
   padding: 30px 24px;
@@ -127,6 +132,7 @@
   color: var(--light-gray-color);
   margin-bottom: 10px;
   font-family: var(--info-font);
+  word-break: break-word;
 }
 
 .profile-status-badge {
@@ -337,5 +343,39 @@
 
   .profile-details-wrapper {
     gap: 36px 60px;
+  }
+}
+
+/* 🔻 Mobile: hide header buttons */
+@media (max-width: 460px) {
+  .profile-action-btns {
+    display: none;
+  }
+}
+
+/* 📌 Sticky bottom buttons */
+
+@media (max-width: 460px) {
+  .mobile-sticky-actions {
+    display: flex;
+    gap: 12px;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    background: #fff;
+    padding: 12px 14px;
+    border-top: 1px solid var(--primary-border-color);
+    z-index: 30;
+  }
+
+  .mobile-sticky-actions button {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 10px;
+    font-size: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
   }
 }

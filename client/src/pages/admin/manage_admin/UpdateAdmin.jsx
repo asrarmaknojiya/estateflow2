@@ -12,7 +12,7 @@ import "../../../assets/css/admin/common/form.css";
 const EditAdmin = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const admin = state?.admin;
+  const admin = state?.user;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

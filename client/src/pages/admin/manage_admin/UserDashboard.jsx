@@ -6,7 +6,7 @@ import Sidebar from '../layout/Sidebar';
 import purchaseSide from "../../../assets/image/purchaseSide.png";
 import saleSide from "../../../assets/image/saleSide.png";
 import inventorySide from "../../../assets/image/inventorySide.png";
-import {Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { HiOutlineArrowLeft } from 'react-icons/hi';
 import { FiMenu } from 'react-icons/fi';
 
@@ -33,7 +33,7 @@ function UserDashboard() {
                     <Link to="/admin/manage-clients" className="back-arrow-btn">
                         <HiOutlineArrowLeft />
                     </Link>
-                    <h5>Hello World</h5>
+                    <h5>John Doe</h5>
                     <button className="form-hamburger-btn" onClick={handleHamburgerClick} aria-label="Toggle sidebar">
                         <FiMenu />
                     </button>
@@ -46,7 +46,9 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Purchase</h6>
                                 <p>You can save your ride booking View, Confirm or Cancel Bookings.</p>
-                                <button className="card-action-btn">VIEW BOOKINGS</button>
+                                <NavLink to={'/admin/salescard'}>
+                                    <button className="card-action-btn">VIEW DETAILS</button>
+                                </NavLink>
                             </div>
                             <div className="card-icon-section" >
                                 <div className="icon-wrapper" >
@@ -62,7 +64,9 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Sales</h6>
                                 <p>You can see your Account or you can edit the profile if you want.</p>
-                                <button className="card-action-btn">VIEW DETAILS</button>
+                                <NavLink to={'/admin/salescard'}>
+                                    <button className="card-action-btn">VIEW DETAILS</button>
+                                </NavLink>
                             </div>
                             <div className="card-icon-section" >
                                 <div className="icon-wrapper" >
@@ -78,7 +82,9 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Inventory</h6>
                                 <p>You can Check Reviews You have Submitted.</p>
-                                <button className="card-action-btn">READ REVIEWS</button>
+                                <NavLink to={'/admin/salescard'}>
+                                    <button className="card-action-btn">VIEW DETAILS</button>
+                                </NavLink>
                             </div>
                             <div className="card-icon-section" >
                                 <div className="icon-wrapper" >
@@ -95,7 +101,7 @@ function UserDashboard() {
                                 <h6>Broker</h6>
                                 <p>You can see your Account or you can edit the profile if you want.</p>
                                 <NavLink to={'/admin/salescard'}>
-                                <button className="card-action-btn">VIEW DETAILS</button>
+                                    <button className="card-action-btn">VIEW DETAILS</button>
                                 </NavLink>
                             </div>
                             <div className="card-icon-section" >
