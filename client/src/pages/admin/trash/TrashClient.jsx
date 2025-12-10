@@ -1,16 +1,11 @@
-// src/pages/admin/TrashClients.jsx
 import React, { useEffect, useState } from "react";
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
-import { IoIosEye } from "react-icons/io";
-import { MdDeleteForever } from "react-icons/md";
-import { TbTrashOff } from "react-icons/tb"; // Restore icon
-import { IoPencil } from "react-icons/io5";
+import { MdDeleteForever, MdPeopleAlt } from "react-icons/md";
+import { TbTrashOff } from "react-icons/tb";
 import { IoSearch } from "react-icons/io5";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import api from "../../../api/axiosInstance";
-import "../../../assets/css/admin/pages/mainLayout.css";
-import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 5;
 
@@ -18,56 +13,48 @@ const TrashClients = () => {
   const [admins, setAdmins] = useState([]);
   const [rolesMap, setRolesMap] = useState({});
   const [loading, setLoading] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
-
   const [searchTerm, setSearchTerm] = useState("");
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        const [usersRes, mappingsRes] = await Promise.all([
+          api.get("/users"),
+          api.get("/user-roles"),
+        ]);
 
-        const usersRes = await api.get("/users");
-        const users = Array.isArray(usersRes.data) ? usersRes.data : [];
-        setAdmins(users.filter((u) => u.status === "trash")); // Only trash
-
-        const mappingsRes = await api.get("/user-roles");
-        const mappings = Array.isArray(mappingsRes.data) ? mappingsRes.data : [];
+        const trashUsers = (usersRes.data || []).filter((u) => u.status === "trash");
+        setAdmins(trashUsers);
 
         const map = {};
-        mappings.forEach((row) => {
-          if (!map[row.user_id]) map[row.user_id] = [];
-          map[row.user_id].push(row.role_name);
+        (mappingsRes.data || []).forEach((r) => {
+          if (!map[r.user_id]) map[r.user_id] = [];
+          map[r.user_id].push(r.role_name || "—");
         });
-
-        Object.keys(map).forEach((id) => {
-          map[id] = map[id].join(", ");
-        });
-
+        Object.keys(map).forEach((id) => (map[id] = map[id].join(", ")));
         setRolesMap(map);
       } catch (err) {
-        console.error("Error:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
   const restoreUser = async (id) => {
+    if (!window.confirm("Restore this user?")) return;
     try {
       await api.put(`/trash-user/${id}`, { status: "active" });
-      setAdmins((prev) => prev.filter((u) => u.id !== id)); // Remove from trash list
+      setAdmins((prev) => prev.filter((u) => u.id !== id));
     } catch (err) {
       console.error(err);
     }
   };
 
-  const deleteUserForever = async (id) => {
+  const deleteForever = async (id) => {
     if (!window.confirm("Delete permanently?")) return;
     try {
       await api.delete(`/users/${id}`);
@@ -77,36 +64,24 @@ const TrashClients = () => {
     }
   };
 
-  const handleEdit = (admin) => navigate("/admin/edit-client", { state: { admin } });
-  const handleView = (admin) => navigate("/admin/user-dashboard", { state: { admin } });
-
-  /* filter + search */
-  const filteredAdmins = admins.filter((admin) => {
-    const q = searchTerm.trim().toLowerCase();
-    const matchSearch =
-      !q ||
-      admin.name?.toLowerCase().includes(q) ||
-      admin.email?.toLowerCase().includes(q) ||
-      admin.number?.toString().includes(q);
-    return matchSearch;
+  const filtered = admins.filter((u) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      String(u.number || "").includes(q)
+    );
   });
 
   useEffect(() => setCurrentPage(1), [searchTerm]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredAdmins.length / PAGE_SIZE));
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const paginated = filteredAdmins.slice(startIndex, startIndex + PAGE_SIZE);
-
-  const changePage = (p) => p >= 1 && p <= totalPages && setCurrentPage(p);
+  const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+  const showPagination = filtered.length > PAGE_SIZE;
 
   const formatDate = (d) =>
-    d
-      ? new Date(d).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      : "-";
+    d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
 
   return (
     <>
@@ -114,189 +89,94 @@ const TrashClients = () => {
       <Navbar />
 
       <main className="admin-panel-header-div">
-        {/* SEARCH */}
         <div className="ma-search-bar">
           <div className="ma-search-wrapper">
-            <span className="ma-search-icon" aria-hidden>
-              <IoSearch />
-            </span>
-
+            <span className="ma-search-icon"><IoSearch /></span>
             <input
               type="search"
               placeholder="Search name, email or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="ma-search-input"
-              aria-label="Search users"
             />
-
-            {searchTerm.length > 0 && (
-              <button
-                type="button"
-                className="ma-clear-btn"
-                aria-label="Clear search"
-                onClick={() => setSearchTerm("")}
-              >
-                ×
-              </button>
-            )}
+            {searchTerm && <button className="ma-clear-btn" onClick={() => setSearchTerm("")}>×</button>}
           </div>
         </div>
 
-        {/* Content */}
         <div className="dashboard-table-container">
           {loading ? (
-            <p>Loading...</p>
+            <div className="loading-state">Loading trash...</div>
+          ) : filtered.length === 0 ? (
+            <div className="empty-state">
+              <MdPeopleAlt size={70} color="#ccc" />
+              <h3>Trash is empty</h3>
+              <p>No deleted clients found</p>
+            </div>
           ) : (
             <>
               <div className="card-list">
-                {paginated.length === 0 ? (
-                  <div className="ma-empty">No admins in trash</div>
-                ) : (
-                  paginated.map((user) => {
-                    const avatar = user.img ? `/uploads/${user.img}` : null;
-                    const firstName = user.name?.split(" ")[0] || "-";
-
-                    return (
-                      <div
-                        key={user.id}
-                        className="common-card common-card--compact"
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Edit ${user.name || "user"}`}
-                        style={{ marginBottom: 12 }}
-                      >
-                        <div className="common-card__left">
-                          <div className="common-card__avatar">
-                            {avatar ? (
-                              <img src={avatar} alt={user.name || "profile"} />
-                            ) : (
-                              <div className="common-card__avatar--placeholder" />
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="common-card__body">
-                          <div className="common-card__title">{firstName}</div>
-                          <div className="common-card__meta">{user.number || "-"}</div>
-                        </div>
-
-                        <div className="common-card__right">
-                          {/* Restore button */}
-                          <button
-                            type="button"
-                            title="Restore"
-                            aria-label={`Restore ${user.name || "user"}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              restoreUser(user.id);
-                            }}
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: 6,
-                            }}
-                          >
-                            <TbTrashOff style={{ fontSize: 20, color: "var(--primary-btn-bg)" }} />
-                          </button>
-
-                          {/* Delete permanently */}
-                          <button
-                            type="button"
-                            title="Delete forever"
-                            aria-label={`Delete ${user.name || "user"} permanently`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteUserForever(user.id);
-                            }}
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: 6,
-                              marginLeft: 8,
-                            }}
-                          >
-                            <MdDeleteForever style={{ fontSize: 20, color: "var(--red-color)" }} />
-                          </button>
-                        </div>
+                {paginated.map((user) => (
+                  <div key={user.id} className="common-card common-card--compact" style={{ marginBottom: 12 }}>
+                    <div className="common-card__left">
+                      <div className="common-card__avatar">
+                        <img src={`/uploads/${user.img || "default.jpg"}`} alt={user.name} />
                       </div>
-                    );
-                  })
-                )}
+                    </div>
+                    <div className="common-card__body">
+                      <div className="common-card__title">{user.name?.split(" ")[0] || "User"}</div>
+                      <div className="common-card__meta">{user.number || "—"}</div>
+                    </div>
+                    <div className="common-card__right">
+                      <button onClick={(e) => { e.stopPropagation(); restoreUser(user.id); }} title="Restore">
+                        <TbTrashOff style={{ fontSize: 20, color: "green" }} />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteForever(user.id); }} title="Delete forever" style={{ marginLeft: 12 }}>
+                        <MdDeleteForever style={{ fontSize: 20, color: "#d32f2f" }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <table>
                 <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Roles</th>
-                    <th>Status</th>
-                    <th>Added</th>
-                    <th>Action</th>
-                  </tr>
+                  <tr><th>Name</th><th>Email</th><th>Phone</th><th>Roles</th><th>Status</th><th>Added</th><th>Action</th></tr>
                 </thead>
-
                 <tbody>
-                  {paginated.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="ma-empty">
-                        No admins in trash
+                  {paginated.map((user) => (
+                    <tr key={user.id}>
+                      <td className="product-info admin-profile">
+                        <img src={`/uploads/${user.img || "default.jpg"}`} alt="profile" />
+                        <span>{user.name}</span>
+                      </td>
+                      <td>{user.email}</td>
+                      <td>{user.number}</td>
+                      <td>{rolesMap[user.id] || "-"}</td>
+                      <td><span className="status trash">Trash</span></td>
+                      <td>{formatDate(user.created_at)}</td>
+                      <td className="actions">
+                        <TbTrashOff onClick={() => restoreUser(user.id)} />
+                        <MdDeleteForever onClick={() => deleteForever(user.id)}/>
                       </td>
                     </tr>
-                  ) : (
-                    paginated.map((user) => (
-                      <tr key={user.id}>
-                        <td className="product-info admin-profile">
-                          <img src={`/uploads/${user.img}`} alt={`${user.name || "profile"}`} />
-                          <span>{user.name}</span>
-                        </td>
-
-                        <td>{user.email}</td>
-                        <td>{user.number}</td>
-                        <td>{rolesMap[user.id] || "-"}</td>
-
-                        <td>
-                          <span className={`status ${user.status}`}>{user.status}</span>
-                        </td>
-
-                        <td>{formatDate(user.created_at)}</td>
-
-                        <td className="actions">
-                          <TbTrashOff onClick={() => restoreUser(user.id)} style={{ cursor: "pointer" }} />
-                          <MdDeleteForever onClick={() => deleteUserForever(user.id)} style={{ cursor: "pointer" }} />
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
 
-              <div className="table-footer-pagination">
-                <span>
-                  Showing {startIndex + 1}-{Math.min(startIndex + PAGE_SIZE, filteredAdmins.length)} of{" "}
-                  {filteredAdmins.length}
-                </span>
-
-                <ul className="pagination">
-                  <li onClick={() => changePage(currentPage - 1)}>
-                    <HiOutlineArrowLeft />
-                  </li>
-
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <li key={i} className={currentPage === i + 1 ? "active" : ""} onClick={() => changePage(i + 1)}>
-                      {String(i + 1).padStart(2, "0")}
-                    </li>
-                  ))}
-
-                  <li onClick={() => changePage(currentPage + 1)}>
-                    <HiOutlineArrowRight />
-                  </li>
-                </ul>
-              </div>
+              {showPagination && (
+                <div className="table-footer-pagination">
+                  <span>Showing {startIndex + 1}-{Math.min(startIndex + PAGE_SIZE, filtered.length)} of {filtered.length}</span>
+                  <ul className="pagination">
+                    <li onClick={() => changePage(currentPage - 1)}><HiOutlineArrowLeft /></li>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li key={i} className={currentPage === i + 1 ? "active" : ""} onClick={() => changePage(i + 1)}>
+                        {String(i + 1).padStart(2, "0")}
+                      </li>
+                    ))}
+                    <li onClick={() => changePage(currentPage + 1)}><HiOutlineArrowRight /></li>
+                  </ul>
+                </div>
+              )}
             </>
           )}
         </div>
