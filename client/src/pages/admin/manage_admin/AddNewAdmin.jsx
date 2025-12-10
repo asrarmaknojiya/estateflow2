@@ -17,6 +17,7 @@ const AddNewAdmin = () => {
   const [email, setEmail] = useState("");
   const [number, setNumber] = useState("");
   const [altNumber, setAltNumber] = useState("");
+  const [address, setAddress] = useState("");
   const [status, setStatus] = useState("active");
   const [password, setPassword] = useState("");
   const [profileFile, setProfileFile] = useState(null);
@@ -101,6 +102,7 @@ const AddNewAdmin = () => {
       formData.append("number", number);
       if (altNumber) formData.append("alt_number", altNumber);
       formData.append("password", password);
+      formData.append("address", address);
       formData.append("status", status);
       if (profileFile) formData.append("img", profileFile);
 
@@ -160,6 +162,10 @@ const AddNewAdmin = () => {
                 <div className="form-group">
                   <label>Alternate Number</label>
                   <input type="text" value={altNumber} onChange={(e) => setAltNumber(e.target.value)} placeholder="Enter alternate number" />
+                </div>
+                 <div className="form-group">
+                  <label>Address</label>
+                  <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter address" />
                 </div>
                 <div className="form-group">
                   <label>Password *</label>

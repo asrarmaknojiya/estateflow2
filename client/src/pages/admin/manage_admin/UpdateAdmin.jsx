@@ -17,6 +17,7 @@ const EditAdmin = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
   const [status, setStatus] = useState("active");
   const [password, setPassword] = useState("");
   const [profileFile, setProfileFile] = useState(null);
@@ -125,6 +126,7 @@ const EditAdmin = () => {
       formData.append("name", name);
       formData.append("email", email);
       formData.append("number", phoneNumber);
+      formData.append("address", address);
       formData.append("status", status);
       if (password.trim()) formData.append("password", password);
       if (profileFile) formData.append("img", profileFile);
@@ -183,6 +185,10 @@ const EditAdmin = () => {
                 <div className="form-group">
                   <label>Phone Number *</label>
                   <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Enter phone number" />
+                </div>
+                <div className="form-group">
+                  <label>Address</label>
+                  <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter address" />
                 </div>
                 <div className="form-group">
                   <label>New Password (optional)</label>

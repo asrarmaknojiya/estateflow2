@@ -62,7 +62,7 @@ function MyProfile() {
             <Sidebar />
             <div className="admin-panel-header-div no-navbar">
                 <div className="add-form-header">
-                    <Link to="/admin/manage-clients" className="back-arrow-btn">
+                    <Link to="/admin/user-dashboard" className="back-arrow-btn">
                         <HiOutlineArrowLeft />
                     </Link>
                     <h5>{profileData.name}</h5>
