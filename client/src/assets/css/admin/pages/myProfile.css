@@ -122,21 +122,22 @@
 ================================ */
 .info-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 10px 0;
-  gap: 16px;
+  flex-direction: column;   /* 👈 vertical */
+  gap: 6px;
+  padding: 14px 0;
 }
 
 .info-row span {
-  font-size: 14px;
+  font-size: clamp(13px, 1.1vw, 14px);
   color: var(--light-black-color);
+  font-weight: 500;
 }
 
 .info-row strong {
-  font-size: 15px;
+  font-size: clamp(15px, 1.3vw, 16px);
   font-weight: 600;
   color: var(--black-color);
+  word-break: break-word;
 }
 
 /* ===============================
