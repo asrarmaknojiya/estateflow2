@@ -32,7 +32,6 @@ const SellList = () => {
 
   return (
     <>
-      <Navbar />
       <Sidebar />
 
       <div className="admin-panel-header-div no-navbar">
