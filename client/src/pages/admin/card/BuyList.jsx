@@ -7,10 +7,15 @@ import Sidebar from "../layout/Sidebar";
 import { FiMenu } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { HiOutlineArrowLeft } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
+
 
 const BuyList = () => {
   const [buys, setBuys] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     fetchBuys();
@@ -54,10 +59,14 @@ const BuyList = () => {
         <div className="sales-page-container">
           <div className="sales-card-header sales-header">
             <h2 className="sales-title">Purchases</h2>
-            <button className="primary-btn add-sell-button">
+            <button
+              className="primary-btn add-sell-button"
+              onClick={() => navigate("/admin/buycard/buysell")}
+            >
               <Plus size={16} />
               Add Buy
             </button>
+
           </div>
 
           <div className="sales-divider" />

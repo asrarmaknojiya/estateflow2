@@ -7,10 +7,15 @@ import Sidebar from "../layout/Sidebar";
 import { FiMenu } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { HiOutlineArrowLeft } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
+
 
 const SellList = () => {
   const [sells, setSells] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     fetchSells();
@@ -55,21 +60,24 @@ const SellList = () => {
           {/* SALES TITLE BAR */}
           <div className="sales-card-header sales-header">
             <h2 className="sales-title">Sales</h2>
-            <button className="primary-btn add-sell-button">
+            <button
+              className="primary-btn add-sell-button"
+              onClick={() => navigate("/admin/salescard/addsell")}
+            >
               <Plus size={16} />
               Add Sell
             </button>
           </div>
 
           <div className="sales-divider" />
-          {sells.map((item,index) => (
+          {sells.map((item, index) => (
             <ExpandableCard
               key={item.id}
               headerLeft={
-                
+
                 <>
                   <div className="booking-id">
-                  #{index+1}
+                    #{index + 1}
                   </div>
                   <div className="complex-name">
                     {item.title}
