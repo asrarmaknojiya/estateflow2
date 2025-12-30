@@ -1,19 +1,9 @@
 // components/common/ExpandableCard/ExpandableCard.jsx
 import React, { useState } from "react";
-import { ChevronDown, Calendar, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import "../../assets/css/components/cards/ExpandableCard.css";
 
 const ExpandableCard = ({
-  id,
-  complex,
-  date,
-  amount,
-  requests,
-  primaryBtnText = "View Requests",
-  dangerBtnText = "Cancel Booking",
-  onPrimaryClick,
-  onDangerClick,
-
   headerLeft,
   children,
   defaultOpen = false,
@@ -21,22 +11,13 @@ const ExpandableCard = ({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="sales-booking-card" style={{ padding: "20px" }}>
+    <div className="sales-booking-card">
       {/* HEADER */}
       <div
         className="sales-card-header"
         style={{ marginBottom: open ? "20px" : "0" }}
       >
-        <div>
-          {headerLeft ? (
-            headerLeft
-          ) : (
-            <>
-              <div className="booking-id">#{id}</div>
-              <div className="complex-name">{complex}</div>
-            </>
-          )}
-        </div>
+        <div>{headerLeft}</div>
 
         <button
           className={`sales-toggle-btn ${open ? "expanded" : ""}`}
@@ -49,42 +30,9 @@ const ExpandableCard = ({
 
       {/* BODY */}
       {open && (
-        <>
-          {/* OLD CONTENT */}
-          {date && (
-            <div className="booking-date">
-              <Calendar size={16} />
-              <span>{date}</span>
-            </div>
-          )}
-
-          {amount && (
-            <div className="booking-amount-section">
-              <div className="booking-amount">
-                Amount:
-                <span className="amount-value">{amount}</span>
-              </div>
-
-              <button
-                className="primary-btn view-requests-btn"
-                onClick={onPrimaryClick}
-              >
-                {primaryBtnText.replace("{n}", requests)}
-              </button>
-            </div>
-          )}
-
-          <button
-            className="cancel-booking-btn"
-            onClick={onDangerClick}
-          >
-            <X size={18} />
-            {dangerBtnText}
-          </button>
-
-          {/* NEW EXTRA CONTENT (SellList details) */}
+        <div className="sales-card-body">
           {children}
-        </>
+        </div>
       )}
     </div>
   );

@@ -7,15 +7,18 @@
   width: 100%;
   max-width: 100%;
   margin-bottom: 16px;
+  padding: 20px; /* BASE PADDING (mobile) */
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
+
 .sales-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+/* Toggle Icon */
 .sales-toggle-btn {
   background: none;
   border: none;
@@ -33,7 +36,16 @@
   transform: rotate(180deg);
 }
 
-/* Booking ID */
+/* ================= BODY ================= */
+
+.sales-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* THIS fixes uneven spacing in dynamic content */
+}
+
+/* ================= TEXT ================= */
+
 .booking-id {
   font-size: 14px;
   font-weight: 600;
@@ -42,7 +54,6 @@
   font-family: var(--info-font);
 }
 
-/* Complex Name */
 .complex-name {
   font-size: 16px;
   font-weight: 600;
@@ -51,12 +62,12 @@
   font-family: var(--primary-font);
 }
 
-/* Date */
+/* ================= DATE ================= */
+
 .booking-date {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
 }
 
 .booking-date svg {
@@ -71,12 +82,12 @@
   font-family: var(--info-font);
 }
 
-/* Amount Section */
+/* ================= AMOUNT ================= */
+
 .booking-amount-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
   gap: 12px;
   background-color: var(--light-white-color);
   padding: 16px 18px;
@@ -96,7 +107,8 @@
   color: var(--black-color);
 }
 
-/* View Requests Button */
+/* ================= BUTTONS ================= */
+
 .view-requests-btn {
   border-radius: 8px;
   padding: 8px 16px;
@@ -105,7 +117,6 @@
   white-space: nowrap;
 }
 
-/* Cancel Button */
 .cancel-booking-btn {
   width: 100%;
   background-color: transparent;
@@ -129,21 +140,20 @@
   color: var(--white-color);
 }
 
-/* Tablet */
+/* ================= RESPONSIVE ================= */
+
 @media (min-width: 768px) {
   .sales-booking-card {
     padding: 24px;
   }
 }
 
-/* Desktop */
 @media (min-width: 1025px) {
   .sales-booking-card {
     padding: 28px;
   }
 }
 
-/* Large Desktop */
 @media (min-width: 1440px) {
   .sales-booking-card {
     padding: 32px;

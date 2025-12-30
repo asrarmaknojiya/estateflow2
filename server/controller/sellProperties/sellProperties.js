@@ -1,21 +1,44 @@
 const connection = require("../../connection/connection");
 
 // 🌊 get all sold properties
+// const getSellProperties = (req, res) => {
+//   const q = `
+//     SELECT * 
+//     FROM sell_properties 
+//   `;
+
+//   connection.query(q, (err, data) => {
+//     if (err)
+//       return res
+//         .status(500)
+//         .json({ error: "database error", details: err });
+
+//     return res.status(200).json(data);
+//   });
+// };
+
 const getSellProperties = (req, res) => {
   const q = `
-    SELECT * 
-    FROM sell_properties 
+    SELECT 
+      sp.*, 
+      p.title AS title
+    FROM sell_properties sp
+    LEFT JOIN properties p 
+      ON sp.property_id = p.id
+    ORDER BY sp.created_at DESC
   `;
 
   connection.query(q, (err, data) => {
     if (err)
-      return res
-        .status(500)
-        .json({ error: "database error", details: err });
+      return res.status(500).json({
+        error: "database error",
+        details: err,
+      });
 
     return res.status(200).json(data);
   });
 };
+
 
 // 🌙 get single sell record by id
 const getSellPropertyById = (req, res) => {
