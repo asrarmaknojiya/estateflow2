@@ -30,6 +30,15 @@
   }
 }
 
+.add-form-title {
+  margin: 0px;
+  padding-bottom: 12px;
+  
+}
+.add-form-title h5{
+  font-size: 20px;
+}
+
 /* === HEADER: Back Arrow + Title + Hamburger (mobile) === */
 .add-form-header {
   position: sticky;
