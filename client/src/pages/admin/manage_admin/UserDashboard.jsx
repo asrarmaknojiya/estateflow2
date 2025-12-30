@@ -45,7 +45,7 @@ function UserDashboard() {
                             <div className="card-text-section">
                                 <h6>Purchase</h6>
                                 <p>You can save your ride booking View, Confirm or Cancel Bookings.</p>
-                                <NavLink to={'/admin/salescard'}>
+                                <NavLink to={'/admin/Buycard'}>
                                     <button className="card-action-btn">VIEW DETAILS</button>
                                 </NavLink>
                             </div>

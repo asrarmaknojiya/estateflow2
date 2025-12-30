@@ -1,57 +1,148 @@
 const connection = require("../../connection/connection");
 
-const buyProperty = (req, res) => {
-    const { property_id, seller_id, assigned_by, amount, details } = req.body;
+// 🌊 get all buy properties
+const getBuyProperties = (req, res) => {
+  const q = `
+    SELECT 
+      bp.*, 
+      p.title AS title
+    FROM buy_properties bp
+    LEFT JOIN properties p 
+      ON bp.property_id = p.id
+    ORDER BY bp.created_at DESC
+  `;
 
-    if (!property_id || !seller_id || !amount) {
-        return res.status(400).json({ message: "Missing required fields" });
-    }
+  connection.query(q, (err, data) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ error: "database error", details: err });
 
-    const checkPropertyQ = "SELECT * FROM properties WHERE id = ?";
+    return res.status(200).json(data);
+  });
+};
 
-    connection.query(checkPropertyQ, [property_id], (err, propData) => {
-        if (err)
-            return res.status(500).json({ error: "Database error", details: err });
+// 🌙 get single buy property by id
+const getBuyPropertyById = (req, res) => {
+  const { id } = req.params;
 
-        if (propData.length === 0) {
-            return res.status(404).json({ message: "Property not found" });
-        }
+  const q = `SELECT * FROM buy_properties WHERE id = ?`;
 
-        // 1. Insert into buy_properties
-        const insertBuyQ = `
-      INSERT INTO buy_properties
-      (property_id, seller_id, assigned_by, amount, details)
-      VALUES (?, ?, ?, ?, ?)
-    `;
+  connection.query(q, [id], (err, data) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ error: "database error", details: err });
 
-        connection.query(
-            insertBuyQ,
-            [property_id, seller_id, assigned_by, amount, details],
-            (err) => {
-                if (err)
-                    return res
-                        .status(500)
-                        .json({ error: "Insert failed", details: err });
+    if (!data.length)
+      return res.status(404).json({ error: "not found" });
 
-                // 2. KEEP property available (admin inventory)
-                const updatePropertyQ =
-                    "UPDATE properties SET status = 'available' WHERE id = ?";
+    return res.status(200).json(data[0]);
+  });
+};
 
-                connection.query(updatePropertyQ, [property_id], (err) => {
-                    if (err)
-                        return res
-                            .status(500)
-                            .json({ error: "Status update failed", details: err });
+// 🌱 add buy property
+const addBuyProperty = (req, res) => {
+  const { property_id, seller_id, assigned_by, amount, details } = req.body;
 
-                    return res.status(201).json({
-                        message: "Property bought and added to inventory",
-                    });
-                });
-            }
-        );
+  if (!property_id || !seller_id || !amount) {
+    return res.status(400).json({
+      error: "required fields missing",
     });
+  }
+
+  const q = `
+    INSERT INTO buy_properties
+      (property_id, seller_id, assigned_by, amount, details)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  connection.query(
+    q,
+    [
+      property_id,
+      seller_id,
+      assigned_by || null,
+      amount,
+      details || null,
+    ],
+    (err, result) => {
+      if (err)
+        return res
+          .status(500)
+          .json({ error: "database error", details: err });
+
+      return res.status(201).json({
+        message: "buy property created",
+        insertId: result.insertId,
+      });
+    }
+  );
+};
+
+// ✨ update buy property
+const updateBuyProperty = (req, res) => {
+  const { id } = req.params;
+  const { property_id, seller_id, assigned_by, amount, details } = req.body;
+
+  const q = `
+    UPDATE buy_properties SET
+      property_id = COALESCE(?, property_id),
+      seller_id = COALESCE(?, seller_id),
+      assigned_by = COALESCE(?, assigned_by),
+      amount = COALESCE(?, amount),
+      details = COALESCE(?, details),
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `;
+
+  connection.query(
+    q,
+    [
+      property_id,
+      seller_id,
+      assigned_by,
+      amount,
+      details,
+      id,
+    ],
+    (err, result) => {
+      if (err)
+        return res
+          .status(500)
+          .json({ error: "database error", details: err });
+
+      if (!result.affectedRows)
+        return res.status(404).json({ error: "not found" });
+
+      return res.status(200).json({ message: "updated" });
+    }
+  );
+};
+
+// 🗑️ delete buy property
+const deleteBuyProperty = (req, res) => {
+  const { id } = req.params;
+
+  const q = `DELETE FROM buy_properties WHERE id = ?`;
+
+  connection.query(q, [id], (err, result) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ error: "database error", details: err });
+
+    if (!result.affectedRows)
+      return res.status(404).json({ error: "not found" });
+
+    return res.status(200).json({ message: "deleted" });
+  });
 };
 
 module.exports = {
-    buyProperty
+  getBuyProperties,
+  getBuyPropertyById,
+  addBuyProperty,
+  updateBuyProperty,
+  deleteBuyProperty,
 };
