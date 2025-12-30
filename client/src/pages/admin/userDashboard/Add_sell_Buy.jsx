@@ -1,0 +1,215 @@
+import React, { useState } from "react";
+import Sidebar from "../layout/Sidebar";
+import { HiOutlineArrowLeft } from "react-icons/hi";
+import { FiMenu } from "react-icons/fi";
+import { MdSave } from "react-icons/md";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import api from "../../../api/axiosInstance";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "../../../assets/css/admin/common/form.css";
+
+const AddSellBuy = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 🔥 Detect mode from path
+  const isSell = location.pathname.includes("addsell");
+  const pageTitle = isSell ? "Add Sale" : "Add Purchase";
+
+  const [form, setForm] = useState({
+    property_id: "",
+    seller_id: "",
+    buyer_id: "",
+    assigned_by: "",
+    amount: "",
+    details: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((p) => ({ ...p, [name]: value }));
+  };
+
+  const isValid = () => {
+    if (!form.property_id || !form.amount || !form.assigned_by) return false;
+    if (isSell && !form.seller_id) return false;
+    if (!isSell && !form.buyer_id) return false;
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValid()) return toast.warn("Please fill required fields");
+
+    setLoading(true);
+    try {
+      const payload = {
+        property_id: form.property_id,
+        assigned_by: form.assigned_by,
+        amount: form.amount,
+        details: form.details,
+      };
+
+      // 🔥 Conditional field
+      if (isSell) payload.seller_id = form.seller_id;
+      else payload.buyer_id = form.buyer_id;
+
+      const apiPath = isSell ? "/add-sale" : "/add-purchase";
+      await api.post(apiPath, payload);
+
+      toast.success(`${pageTitle} added successfully`);
+      setTimeout(() => navigate(-1), 800);
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHamburgerClick = () => {
+    if (window.toggleAdminSidebar) window.toggleAdminSidebar();
+  };
+
+  return (
+    <>
+      <Sidebar />
+
+      <main className="admin-panel-header-div no-navbar">
+        {/* HEADER */}
+        <div className="add-form-header">
+          <Link to={-1} className="back-arrow-btn">
+            <HiOutlineArrowLeft />
+          </Link>
+
+          <h5>{pageTitle}</h5>
+
+          <button
+            className="form-hamburger-btn"
+            onClick={handleHamburgerClick}
+          >
+            <FiMenu />
+          </button>
+        </div>
+
+        {/* FORM */}
+        <div className="form-content-after-header">
+          <form onSubmit={handleSubmit} className="form-layout">
+
+            {/* LEFT COLUMN */}
+            <div>
+              <div className="form-card">
+                <h6>Transaction Information</h6>
+
+                <div className="form-group">
+                  <label>Property ID *</label>
+                  <input
+                    type="text"
+                    name="property_id"
+                    value={form.property_id}
+                    onChange={handleChange}
+                    placeholder="Enter property ID"
+                  />
+                </div>
+
+                {isSell ? (
+                  <div className="form-group">
+                    <label>Seller ID *</label>
+                    <input
+                      type="number"
+                      name="seller_id"
+                      value={form.seller_id}
+                      onChange={handleChange}
+                      placeholder="Enter seller ID"
+                    />
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label>Buyer ID *</label>
+                    <input
+                      type="number"
+                      name="buyer_id"
+                      value={form.buyer_id}
+                      onChange={handleChange}
+                      placeholder="Enter buyer ID"
+                    />
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>Assigned By *</label>
+                  <input
+                    type="number"
+                    name="assigned_by"
+                    value={form.assigned_by}
+                    onChange={handleChange}
+                    placeholder="Admin / Staff ID"
+                  />
+                </div>
+              </div>
+
+              <div className="form-card">
+                <h6>Additional Details</h6>
+
+                <div className="form-group">
+                  <label>Details</label>
+                  <textarea
+                    name="details"
+                    value={form.details}
+                    onChange={handleChange}
+                    placeholder="Optional notes"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div>
+              <div className="form-card">
+                <h6>Payment</h6>
+
+                <div className="form-group">
+                  <label>Amount *</label>
+                  <input
+                    type="number"
+                    name="amount"
+                    value={form.amount}
+                    onChange={handleChange}
+                    placeholder="Enter amount"
+                  />
+                </div>
+              </div>
+
+              {/* DESKTOP SAVE */}
+              <div className="desktop-save-wrapper">
+                <button
+                  className="desktop-save-btn"
+                  disabled={!isValid() || loading}
+                >
+                  <MdSave />
+                  {loading ? "Saving..." : "Save & Continue"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* MOBILE SAVE */}
+        <div className="sticky-bottom-save">
+          <button
+            onClick={handleSubmit}
+            disabled={!isValid() || loading}
+          >
+            {loading ? "Saving..." : "Save & Continue"}
+          </button>
+        </div>
+      </main>
+
+      <ToastContainer position="top-right" autoClose={2500} theme="colored" />
+    </>
+  );
+};
+
+export default AddSellBuy;

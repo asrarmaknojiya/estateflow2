@@ -25,6 +25,8 @@ import MyProfile from "../../pages/admin/my_profile/MyProfile";
 import TrashClients from "../../pages/admin/trash/TrashClient";
 import SellList from "../../pages/admin/card/SellList";
 import BuyList from "../../pages/admin/card/BuyList";
+import AddSellBuy from "../../pages/admin/userDashboard/Add_sell_Buy";
+
 
 const DashboardRoute = () => {
   return (
@@ -54,7 +56,15 @@ const DashboardRoute = () => {
         <Route path="/admin/trash-clients" element={<TrashClients />} />
         <Route path="/admin/user-dashboard" element={<UserDashboard />} />
         <Route path="/admin/salescard" element={<SellList />} />
+<<<<<<< HEAD
         <Route path="/admin/buycard" element={<BuyList />} />
+=======
+        <Route path="/admin/salescard/addsell" element={<AddSellBuy />} />
+
+        <Route path="/admin/buycard" element={<BuyList />} />
+        <Route path="/admin/buycard/buysell" element={<AddSellBuy />} />
+
+>>>>>>> 461b60146869599d444b883b193e04bd84247f94
 
         <Route path="/admin/profile" element={<MyProfile />} />
         <Route path="/logout" element={<LogoutPage />} />
