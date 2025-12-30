@@ -8,21 +8,20 @@ import { FiMenu } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { HiOutlineArrowLeft } from "react-icons/hi";
 
-const SellList = () => {
-  const [sells, setSells] = useState([]);
+const BuyList = () => {
+  const [buys, setBuys] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSells();
+    fetchBuys();
   }, []);
 
-  const fetchSells = async () => {
+  const fetchBuys = async () => {
     try {
-      const res = await api.get("/getsellproperties");
-      setSells(res.data || []);
-      console.log(res.data)
+      const res = await api.get("/getbuyproperties");
+      setBuys(res.data || []);
     } catch (err) {
-      console.error("Failed to fetch sells", err);
+      console.error("Failed to fetch buys", err);
     } finally {
       setLoading(false);
     }
@@ -51,30 +50,29 @@ const SellList = () => {
             <FiMenu />
           </button>
         </div>
+
         <div className="sales-page-container">
-          {/* SALES TITLE BAR */}
           <div className="sales-card-header sales-header">
-            <h2 className="sales-title">Sales</h2>
+            <h2 className="sales-title">Purchases</h2>
             <button className="primary-btn add-sell-button">
               <Plus size={16} />
-              Add Sell
+              Add Buy
             </button>
           </div>
 
           <div className="sales-divider" />
-          {sells.map((item,index) => (
+
+          {buys.map((item, index) => (
             <ExpandableCard
               key={item.id}
               headerLeft={
-                
                 <>
                   <div className="booking-id">
-                  #{index+1}
+                    #{index + 1}
                   </div>
                   <div className="complex-name">
                     {item.title}
                   </div>
-
                 </>
               }
             >
@@ -94,15 +92,9 @@ const SellList = () => {
                 </div>
               </div>
 
-              {/* {item.details && (
-                <div className="sales-extra-content">
-                  {item.details}
-                </div>
-              )} */}
-
               <button className="cancel-booking-btn">
                 <X size={18} />
-                Cancel Sales
+                Cancel Purchase
               </button>
             </ExpandableCard>
           ))}
@@ -112,6 +104,4 @@ const SellList = () => {
   );
 };
 
-export default SellList;
-
-
+export default BuyList;
