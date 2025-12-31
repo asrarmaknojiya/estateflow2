@@ -18,7 +18,6 @@ function MyProfile() {
 
   const [user, setUser] = useState([]);
 
-
   const { userId } = useActiveUser();
 
   useEffect(() => {
@@ -31,9 +30,9 @@ function MyProfile() {
 
     if (authUser) {
       setUser(authUser);
+      
     }
   }, [userId]);
-
 
 
 
@@ -45,15 +44,17 @@ function MyProfile() {
     5: "Retailer",
   };
 
+  const fetchRoles = async () => {
+    const res = await api.get(`/user-roles/${user.id}`);
+    const roles = Array.isArray(res.data) ? res.data : [];
+    setMatchedRoles(
+      roles.map((r) => ROLE_MAP[r.role_id]).filter(Boolean)
+    );
+  }
+
   useEffect(() => {
-    (async () => {
-      const res = await api.get(`/user-roles/${user.id}`);
-      const roles = Array.isArray(res.data) ? res.data : [];
-      setMatchedRoles(
-        roles.map((r) => ROLE_MAP[r.role_id]).filter(Boolean)
-      );
-    })();
-  }, []);
+    fetchRoles()
+  }, [user]);
 
   const profileData = {
     name: user.name,
