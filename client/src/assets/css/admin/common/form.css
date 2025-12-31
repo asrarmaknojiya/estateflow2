@@ -356,3 +356,15 @@
 @media (min-width: 768px) {
   .sticky-bottom-save { display: none !important; }
 }
+/* ===== DATE INPUT FIX (NO DESIGN CHANGE) ===== */
+.form-group input[type="date"] {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  background: var(--light-white-color);
+}
+
+/* spacing fix due to extra field */
+.form-card {
+  margin-bottom: 16px;
+}

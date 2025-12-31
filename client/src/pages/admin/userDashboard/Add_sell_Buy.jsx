@@ -3,7 +3,7 @@ import Sidebar from "../layout/Sidebar";
 import { HiOutlineArrowLeft } from "react-icons/hi";
 import { FiMenu } from "react-icons/fi";
 import { MdSave } from "react-icons/md";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../../api/axiosInstance";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,72 +13,71 @@ import { useActiveUser } from "../../../context/ActiveUserContext";
 
 const AddSellBuy = () => {
   const navigate = useNavigate();
-  const [client, setClient] = useState([])
+  const location = useLocation();
 
-  const { userId } = useActiveUser();
-
-  useEffect(() => {
-    if (!userId) return;
-    api.get(`/users/${userId}`).then(res => setClient(res.data));
-  }, [userId]);
-
-  const { me } = useMe();
-
-  // detect mode
   const isSell = location.pathname.includes("addsell");
   const pageTitle = isSell ? "Add Sale" : "Add Purchase";
+
+  const { userId } = useActiveUser();
+  const { me } = useMe();
+
+  const [client, setClient] = useState(null);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+
 
   const [form, setForm] = useState({
     property_id: "",
     buyer_id: "",
     seller_id: "",
     assigned_by: "",
+    assigned_at: today,
     amount: "",
     details: "",
   });
 
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  // ---------------- AUTO SET BUYER / SELLER + ASSIGNED BY ----------------
+  // 🔹 fetch active client
   useEffect(() => {
-    if (client) {
-      if (isSell) {
-        setForm((p) => ({ ...p, buyer_id: client.id }));
-      } else {
-        setForm((p) => ({ ...p, seller_id: client.id }));
-      }
+    if (!userId) return;
+    api.get(`/users/${userId}`).then((res) => {
+      setClient(res.data);
+    });
+  }, [userId]);
+
+  // 🔹 auto set buyer / seller
+  useEffect(() => {
+    if (!client) return;
+
+    if (isSell) {
+      setForm((p) => ({ ...p, buyer_id: client.id }));
+    } else {
+      setForm((p) => ({ ...p, seller_id: client.id }));
     }
   }, [client, isSell]);
 
+  // 🔹 auto set assigned_by
   useEffect(() => {
     if (me) {
       setForm((p) => ({ ...p, assigned_by: me.id }));
     }
   }, [me]);
 
-  // ---------------- FETCH PROPERTIES ----------------
+  // 🔹 fetch properties
   useEffect(() => {
-    fetchProperties();
+    api.get("/getproperties")
+      .then((res) => setProperties(res.data || []))
+      .catch(() => toast.error("Failed to load properties"));
   }, []);
 
-  const fetchProperties = async () => {
-    try {
-      const res = await api.get("/getproperties");
-      setProperties(res.data || []);
-    } catch {
-      toast.error("Failed to load properties");
-    }
-  };
-
-  // ---------------- HANDLERS ----------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
   };
 
   const isValid = () => {
-    if (!form.property_id || !form.amount || !form.assigned_by) return false;
+    if (!form.property_id || !form.amount) return false;
     if (isSell && !form.buyer_id) return false;
     if (!isSell && !form.seller_id) return false;
     return true;
@@ -93,17 +92,17 @@ const AddSellBuy = () => {
       const payload = {
         property_id: form.property_id,
         assigned_by: form.assigned_by,
+        assigned_at: `${form.assigned_at} ${new Date().toTimeString().slice(0, 8)}`,
         amount: form.amount,
         details: form.details,
+
+
       };
 
       if (isSell) payload.buyer_id = form.buyer_id;
       else payload.seller_id = form.seller_id;
 
-      const apiPath = isSell
-        ? "/addsellproperty"
-        : "/addbuyproperty";
-
+      const apiPath = isSell ? "/addsellproperty" : "/addbuyproperty";
       await api.post(apiPath, payload);
 
       toast.success(`${pageTitle} added successfully`);
@@ -115,11 +114,6 @@ const AddSellBuy = () => {
     }
   };
 
-  const handleHamburgerClick = () => {
-    if (window.toggleAdminSidebar) window.toggleAdminSidebar();
-  };
-
-  // ---------------- JSX ----------------
   return (
     <>
       <Sidebar />
@@ -131,20 +125,22 @@ const AddSellBuy = () => {
             <HiOutlineArrowLeft />
           </Link>
           <h5>{pageTitle}</h5>
-          <button className="form-hamburger-btn" onClick={handleHamburgerClick}>
+          <button
+            className="form-hamburger-btn"
+            onClick={() => window.toggleAdminSidebar?.()}
+          >
             <FiMenu />
           </button>
         </div>
 
         {/* FORM */}
         <div className="form-content-after-header">
-          <form onSubmit={handleSubmit} className="form-layout">
+          <form className="form-layout" onSubmit={handleSubmit}>
             {/* LEFT */}
             <div>
               <div className="form-card">
                 <h6>Transaction Information</h6>
 
-                {/* PROPERTY */}
                 <div className="form-group">
                   <label>Property *</label>
                   <select
@@ -161,28 +157,15 @@ const AddSellBuy = () => {
                   </select>
                 </div>
 
-                {/* BUYER / SELLER (READONLY) */}
-                {isSell ? (
-                  <div className="form-group">
-                    <label>Buyer</label>
-                    <input
-                      type="text"
-                      value={`${client?.id || ""} - ${client?.name || ""}`}
-                      readOnly
-                    />
-                  </div>
-                ) : (
-                  <div className="form-group">
-                    <label>Seller</label>
-                    <input
-                      type="text"
-                      value={`${client?.id || ""} - ${client?.name || ""}`}
-                      readOnly
-                    />
-                  </div>
-                )}
+                <div className="form-group">
+                  <label>{isSell ? "Buyer" : "Seller"}</label>
+                  <input
+                    type="text"
+                    value={client ? `${client.id} - ${client.name}` : ""}
+                    readOnly
+                  />
+                </div>
 
-                {/* ASSIGNED BY (READONLY) */}
                 <div className="form-group">
                   <label>Assigned By</label>
                   <input
@@ -192,8 +175,21 @@ const AddSellBuy = () => {
                   />
                 </div>
 
-                <div className="form-card">
-                  <h6>Additional Details</h6>
+                {/* 🌱 NEW DATE FIELD */}
+                <div className="form-group">
+                  <label>Assigned Date</label>
+                  <input
+                    type="date"
+                    name="assigned_at"
+                    value={form.assigned_at}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="form-card">
+                <h6>Additional Details</h6>
+                <div className="form-group">
                   <textarea
                     name="details"
                     value={form.details}
@@ -202,31 +198,31 @@ const AddSellBuy = () => {
                   />
                 </div>
               </div>
+            </div>
 
-              {/* RIGHT */}
-              <div>
-                <div className="form-card">
-                  <h6>Payment</h6>
-                  <div className="form-group">
-                    <label>Amount *</label>
-                    <input
-                      type="number"
-                      name="amount"
-                      value={form.amount}
-                      onChange={handleChange}
-                    />
-                  </div>
+            {/* RIGHT */}
+            <div>
+              <div className="form-card">
+                <h6>Payment</h6>
+                <div className="form-group">
+                  <label>Amount *</label>
+                  <input
+                    type="number"
+                    name="amount"
+                    value={form.amount}
+                    onChange={handleChange}
+                  />
                 </div>
+              </div>
 
-                <div className="desktop-save-wrapper">
-                  <button
-                    className="desktop-save-btn"
-                    disabled={!isValid() || loading}
-                  >
-                    <MdSave />
-                    {loading ? "Saving..." : "Save & Continue"}
-                  </button>
-                </div>
+              <div className="desktop-save-wrapper">
+                <button
+                  className="desktop-save-btn"
+                  disabled={!isValid() || loading}
+                >
+                  <MdSave />
+                  {loading ? "Saving..." : "Save & Continue"}
+                </button>
               </div>
             </div>
           </form>
