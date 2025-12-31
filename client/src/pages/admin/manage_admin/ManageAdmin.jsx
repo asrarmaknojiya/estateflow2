@@ -11,8 +11,6 @@ import "../../../assets/css/admin/pages/mainLayout.css";
 import CommonCard from "../common/CommonCard";
 import { useNavigate } from "react-router-dom";
 import { FaFilter } from "react-icons/fa";
-
-
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import { useActiveUser } from "../../../context/ActiveUserContext";
 
@@ -62,7 +60,6 @@ const ManageAdmin = () => {
         const map = {};
         mappings.forEach((m) => {
           if (!map[m.user_id]) map[m.user_id] = [];
-          // m.role_name may be "seller" or "Seller" — normalize to lowercase
           map[m.user_id].push(String(m.role_name || "").toLowerCase());
         });
         setUserRolesMap(map);
@@ -123,11 +120,10 @@ const ManageAdmin = () => {
 
   // Filter by role + search
   const filteredClients = clients.filter((client) => {
-    // role check: selectedRole 'all' means pass
     const hasRole =
       selectedRole === "all" ||
       (userRolesMap[client.id] &&
-        userRolesMap[client.id].some((r) => r === selectedRole)); // both sides lowercase
+        userRolesMap[client.id].some((r) => r === selectedRole));
 
     const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
@@ -150,10 +146,10 @@ const ManageAdmin = () => {
   const formatDate = (d) =>
     d
       ? new Date(d).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
       : "-";
 
   return (
@@ -198,16 +194,14 @@ const ManageAdmin = () => {
                 {selectedRole === "all" ? "All" : cap(selectedRole)}
               </span>
               <IoChevronDown
-                className={`dropdown-arrow ${isDropdownOpen ? "open" : ""
-                  }`}
+                className={`dropdown-arrow ${isDropdownOpen ? "open" : ""}`}
               />
             </button>
 
             {isDropdownOpen && (
               <div className="dropdown-menu">
                 <div
-                  className={`dropdown-item ${selectedRole === "all" ? "active" : ""
-                    }`}
+                  className={`dropdown-item ${selectedRole === "all" ? "active" : ""}`}
                   onClick={() => {
                     setSelectedRole("all");
                     setIsDropdownOpen(false);
@@ -218,10 +212,9 @@ const ManageAdmin = () => {
                 {ALLOWED_ROLES.map((role) => (
                   <div
                     key={role}
-                    className={`dropdown-item ${selectedRole === role ? "active" : ""
-                      }`}
+                    className={`dropdown-item ${selectedRole === role ? "active" : ""}`}
                     onClick={() => {
-                      setSelectedRole(role); // role is lowercase
+                      setSelectedRole(role);
                       setIsDropdownOpen(false);
                     }}
                   >
@@ -240,127 +233,126 @@ const ManageAdmin = () => {
           </button>
         </div>
 
-        {/* TABLE & CARDS */}
+        {/* TABLE & CARDS WITH LOADING OVERLAY */}
         <div className="dashboard-table-container">
-          {loading ? (
-            <p style={{ textAlign: "center", padding: "60px" }}>
-              Loading clients...
-            </p>
-          ) : (
-            <>
-              {/* Mobile Cards */}
-              <div className="card-list">
-                {paginated.length === 0 ? (
-                  <div className="ma-empty">No clients found</div>
-                ) : (
-                  paginated.map((user) => {
-                    const avatar = user.img ? `/uploads/${user.img}` : null;
-                    const firstName =
-                      user.name?.split(" ")[0] || "User";
-                    return (
-                      <CommonCard
-                        key={user.id}
-                        avatar={avatar}
-                        title={firstName}
-                        meta={user.number || "No phone"}
-                        onClick={() => openUser(user)}
-                        compact
-                      />
-                    );
-                  })
-                )}
-              </div>
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="loading-overlay">
+              <div className="loader-spinner"></div>
+              <p>Loading clients...</p>
+            </div>
+          )}
 
-              {/* Desktop Table */}
-              <table>
-                <thead>
+          {/* Main Content (blurred when loading) */}
+          <div className={`table-content ${loading ? "blurred" : ""}`}>
+            {/* Mobile Cards */}
+            <div className="card-list">
+              {paginated.length === 0 ? (
+                <div className="ma-empty">No clients found</div>
+              ) : (
+                paginated.map((user) => {
+                  const avatar = user.img ? `/uploads/${user.img}` : null;
+                  const firstName = user.name?.split(" ")[0] || "User";
+                  return (
+                    <CommonCard
+                      key={user.id}
+                      avatar={avatar}
+                      title={firstName}
+                      meta={user.number || "No phone"}
+                      onClick={() => openUser(user)}
+                      compact
+                    />
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Roles</th>
+                  <th>Status</th>
+                  <th>Added</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Roles</th>
-                    <th>Status</th>
-                    <th>Added</th>
-                    <th>Action</th>
+                    <td colSpan={7} className="ma-empty">
+                      No clients found
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {paginated.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="ma-empty">
-                        No clients found
+                ) : (
+                  paginated.map((user) => (
+                    <tr key={user.id}>
+                      <td className="product-info admin-profile">
+                        <img
+                          src={`/uploads/${user.img || "default.jpg"}`}
+                          alt="profile"
+                        />
+                        <span>{user.name}</span>
+                      </td>
+                      <td>{user.email}</td>
+                      <td>{user.number}</td>
+                      <td>
+                        {(userRolesMap[user.id] || [])
+                          .map((r) => cap(r))
+                          .join(", ") || "-"}
+                      </td>
+                      <td>
+                        <span className={`status ${user.status}`}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td>{formatDate(user.created_at)}</td>
+                      <td className="actions">
+                        <IoPencil onClick={() => handleEdit(user)} />
+                        <IoIosEye onClick={() => openUser(user)} />
+                        <MdDeleteForever
+                          onClick={() => openTrashConfirm(user)}
+                        />
                       </td>
                     </tr>
-                  ) : (
-                    paginated.map((user) => (
-                      <tr key={user.id}>
-                        <td className="product-info admin-profile">
-                          <img
-                            src={`/uploads/${user.img || "default.jpg"}`}
-                            alt="profile"
-                          />
-                          <span>{user.name}</span>
-                        </td>
-                        <td>{user.email}</td>
-                        <td>{user.number}</td>
-                        <td>
-                          {(userRolesMap[user.id] || [])
-                            .map((r) => cap(r))
-                            .join(", ") || "-"}
-                        </td>
-                        <td>
-                          <span className={`status ${user.status}`}>
-                            {user.status}
-                          </span>
-                        </td>
-                        <td>{formatDate(user.created_at)}</td>
-                        <td className="actions">
-                          <IoPencil onClick={() => handleEdit(user)} />
-                          <IoIosEye onClick={() => openUser(user)} />
-                          <MdDeleteForever
-                            onClick={() => openTrashConfirm(user)}
-                          />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                  ))
+                )}
+              </tbody>
+            </table>
 
-              {/* Pagination */}
-              <div className="table-footer-pagination">
-                <span>
-                  Showing {startIndex + 1}-
-                  {Math.min(
-                    startIndex + PAGE_SIZE,
-                    filteredClients.length
-                  )}{" "}
-                  of {filteredClients.length}
-                </span>
-                <ul className="pagination">
-                  <li onClick={() => changePage(currentPage - 1)}>
-                    <HiOutlineArrowLeft />
+            {/* Pagination */}
+            <div className="table-footer-pagination">
+              <span>
+                Showing {startIndex + 1}-
+                {Math.min(startIndex + PAGE_SIZE, filteredClients.length)} of{" "}
+                {filteredClients.length}
+              </span>
+              <ul className="pagination">
+                <li onClick={() => changePage(currentPage - 1)}>
+                  <HiOutlineArrowLeft />
+                </li>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <li
+                    key={i}
+                    className={currentPage === i + 1 ? "active" : ""}
+                    onClick={() => changePage(i + 1)}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </li>
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <li
-                      key={i}
-                      className={currentPage === i + 1 ? "active" : ""}
-                      onClick={() => changePage(i + 1)}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </li>
-                  ))}
-                  <li onClick={() => changePage(currentPage + 1)}>
-                    <HiOutlineArrowRight />
-                  </li>
-                </ul>
-              </div>
-            </>
-          )}
+                ))}
+                <li onClick={() => changePage(currentPage + 1)}>
+                  <HiOutlineArrowRight />
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </main>
 
-      {/* 🔥 Simple Confirm Modal for trash */}
+      {/* Confirm Modal for Trash */}
       <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => {
@@ -368,14 +360,6 @@ const ManageAdmin = () => {
           setSelectedUser(null);
         }}
         onConfirm={handleConfirmTrash}
-      // title="Move to Trash?"
-      // message={
-      //   selectedUser
-      //     ? `Are you sure you want to move "${selectedUser.name}" to trash?`
-      //     : "Are you sure you want to move this user to trash?"
-      // }
-      // confirmLabel="Yes, Move"
-      // cancelLabel="Cancel"
       />
     </>
   );

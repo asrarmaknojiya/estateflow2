@@ -191,42 +191,42 @@ const AddSellBuy = () => {
                     readOnly
                   />
                 </div>
-              </div>
 
-              <div className="form-card">
-                <h6>Additional Details</h6>
-                <textarea
-                  name="details"
-                  value={form.details}
-                  onChange={handleChange}
-                  placeholder="Optional notes"
-                />
-              </div>
-            </div>
-
-            {/* RIGHT */}
-            <div>
-              <div className="form-card">
-                <h6>Payment</h6>
-                <div className="form-group">
-                  <label>Amount *</label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={form.amount}
+                <div className="form-card">
+                  <h6>Additional Details</h6>
+                  <textarea
+                    name="details"
+                    value={form.details}
                     onChange={handleChange}
+                    placeholder="Optional notes"
                   />
                 </div>
               </div>
 
-              <div className="desktop-save-wrapper">
-                <button
-                  className="desktop-save-btn"
-                  disabled={!isValid() || loading}
-                >
-                  <MdSave />
-                  {loading ? "Saving..." : "Save & Continue"}
-                </button>
+              {/* RIGHT */}
+              <div>
+                <div className="form-card">
+                  <h6>Payment</h6>
+                  <div className="form-group">
+                    <label>Amount *</label>
+                    <input
+                      type="number"
+                      name="amount"
+                      value={form.amount}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="desktop-save-wrapper">
+                  <button
+                    className="desktop-save-btn"
+                    disabled={!isValid() || loading}
+                  >
+                    <MdSave />
+                    {loading ? "Saving..." : "Save & Continue"}
+                  </button>
+                </div>
               </div>
             </div>
           </form>

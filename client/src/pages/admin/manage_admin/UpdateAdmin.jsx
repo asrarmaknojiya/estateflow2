@@ -163,13 +163,16 @@ const EditAdmin = () => {
           <Link to="/admin/manage-clients" className="back-arrow-btn">
             <HiOutlineArrowLeft />
           </Link>
-          <h5>Edit Client</h5>
+          <h5>{name}</h5>
           <button className="form-hamburger-btn" onClick={handleHamburgerClick} aria-label="Toggle sidebar">
             <FiMenu />
           </button>
         </div>
 
         <div className="form-content-after-header">
+          <div className="add-form-title">
+            <h5>Edit Client</h5>
+          </div>
           <form onSubmit={handleSubmit} className="form-layout">
             <div>
               <div className="form-card">

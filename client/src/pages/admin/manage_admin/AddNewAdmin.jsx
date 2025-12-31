@@ -175,7 +175,7 @@ const AddNewAdmin = () => {
 
               {/* Profile Photo with Preview */}
               <div className="form-card">
-                <h6>Profile Photo</h6>
+                <h6>Profile Photo *</h6>
                 <div className="upload-box" onClick={handleButtonClick}>
                   {previewUrl ? (
                     <div className="image-preview-container">
@@ -231,7 +231,7 @@ const AddNewAdmin = () => {
               </div>
 
               <div className="form-card">
-                <h6>Roles</h6>
+                <h6>Roles *</h6>
                 <div className="form-group">
                   {roles.length === 0 ? (
                     <p style={{ color: "#888", fontSize: "14px" }}>No roles available</p>

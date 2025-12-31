@@ -133,13 +133,16 @@ const EditProperty = () => {
           <Link to="/admin/properties" className="back-arrow-btn">
             <HiOutlineArrowLeft />
           </Link>
-          <h5>Edit Property</h5>
+          <h5>{form.title}</h5>
           <button className="form-hamburger-btn" onClick={handleHamburgerClick} aria-label="Toggle sidebar">
             <FiMenu />
           </button>
         </div>
 
         <div className="form-content-after-header">
+          <div className="add-form-title">
+            <h5>Edit Property</h5>
+          </div>
           <form onSubmit={handleSubmit} className="form-layout">
             <div>
               <div className="form-card">

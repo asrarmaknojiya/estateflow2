@@ -30,7 +30,7 @@ function UserDashboard() {
 
 
 
-    const handleProfile = () => navigate("/admin/profile", { state: { client } });
+    const handleProfile = () => navigate("/admin/profile");
     const handleNavigateToSell = () => navigate("/admin/salescard");
     const handleNavigateToBuy = () => navigate("/admin/buycard");
     const handleHamburgerClick = () => {

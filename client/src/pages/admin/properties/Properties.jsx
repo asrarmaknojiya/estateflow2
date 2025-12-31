@@ -3,7 +3,7 @@ import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
 import { IoIosEye } from "react-icons/io";
 import { MdDeleteForever } from "react-icons/md";
 import { IoPencil, IoSearch } from "react-icons/io5";
-import { IoFilterOutline, IoChevronDown } from "react-icons/io5";
+import { IoChevronDown } from "react-icons/io5";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import api from "../../../api/axiosInstance";
@@ -14,16 +14,13 @@ import CommonCard from "../common/CommonCard";
 import { useNavigate } from "react-router-dom";
 import { FaFilter } from "react-icons/fa";
 
-
-
-
 const PAGE_SIZE = 6;
 
 const STATUS_OPTIONS = [
-  { value: "All", label: "All " },
+  { value: "All", label: "All" },
   { value: "available", label: "Available" },
   { value: "reserved", label: "Reserved" },
-  { value: "sold", label: "Sold" }
+  { value: "sold", label: "Sold" },
 ];
 
 const Properties = () => {
@@ -69,13 +66,11 @@ const Properties = () => {
     try {
       await api.delete(`/deleteproperty/${p.id}`);
       toast.success("Property deleted");
-      setProperties(prev => prev.filter(item => item.id !== p.id));
+      setProperties((prev) => prev.filter((item) => item.id !== p.id));
     } catch (err) {
       toast.error("Delete failed");
     }
   };
-
-  // const openDetails = (p) => navigate(`/admin/property/${p.id}`, { state: { item: p } });
 
   const onEdit = (e, p) => {
     e.stopPropagation();
@@ -129,7 +124,7 @@ const Properties = () => {
           </div>
         </div>
 
-        {/* FILTER DROPDOWN + ADD BUTTON – Same as ManageAdmin */}
+        {/* FILTER DROPDOWN + ADD BUTTON */}
         <div className="ma-tabs-row">
           <div className="custom-filter-dropdown" ref={dropdownRef}>
             <button
@@ -137,8 +132,14 @@ const Properties = () => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <FaFilter className="filter-icon" />
-              <span>{selectedStatus === "All" ? "All " : STATUS_OPTIONS.find(s => s.value === selectedStatus)?.label}</span>
-              <IoChevronDown className={`dropdown-arrow ${isDropdownOpen ? "open" : ""}`} />
+              <span>
+                {selectedStatus === "All"
+                  ? "All"
+                  : STATUS_OPTIONS.find((s) => s.value === selectedStatus)?.label}
+              </span>
+              <IoChevronDown
+                className={`dropdown-arrow ${isDropdownOpen ? "open" : ""}`}
+              />
             </button>
 
             {isDropdownOpen && (
@@ -146,7 +147,8 @@ const Properties = () => {
                 {STATUS_OPTIONS.map((option) => (
                   <div
                     key={option.value}
-                    className={`dropdown-item ${selectedStatus === option.value ? "active" : ""}`}
+                    className={`dropdown-item ${selectedStatus === option.value ? "active" : ""
+                      }`}
                     onClick={() => {
                       setSelectedStatus(option.value);
                       setIsDropdownOpen(false);
@@ -159,104 +161,130 @@ const Properties = () => {
             )}
           </div>
 
-          <button className="ma-add-btn" onClick={() => navigate("/admin/addproperty")}>
+          <button
+            className="ma-add-btn"
+            onClick={() => navigate("/admin/addproperty")}
+          >
             Add Property
           </button>
         </div>
 
-        {/* TABLE & CARDS */}
+        {/* TABLE & CARDS WITH LOADING OVERLAY */}
         <div className="dashboard-table-container">
-          {loading ? (
-            <p style={{ textAlign: "center", padding: "60px" }}>Loading properties...</p>
-          ) : (
-            <>
-              {/* Mobile Cards */}
-              <div className="card-list">
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="loading-overlay">
+              <div className="loader-spinner"></div>
+              <p>Loading properties...</p>
+            </div>
+          )}
+
+          {/* Main Content (blurred when loading) */}
+          <div className={`table-content ${loading ? "blurred" : ""}`}>
+            {/* Mobile Cards */}
+            <div className="card-list">
+              {paginated.length === 0 ? (
+                <div className="ma-empty">No properties found</div>
+              ) : (
+                paginated.map((p) => (
+                  <CommonCard
+                    key={p.id}
+                    avatar={p.image ? `/uploads/${p.image}` : null}
+                    title={p.title}
+                    meta={p.address}
+                    onClick={() => navigate(`/admin/property/${p.id}`, { state: { item: p } })}
+                    compact
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <table>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Address</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Added</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
                 {paginated.length === 0 ? (
-                  <div className="ma-empty">No properties found</div>
+                  <tr>
+                    <td colSpan={6} className="ma-empty">
+                      No properties found
+                    </td>
+                  </tr>
                 ) : (
                   paginated.map((p) => (
-                    <CommonCard
-                      key={p.id}
-                      avatar={p.image ? `/uploads/${p.image}` : null}
-                      title={p.title}
-                      meta={p.address}
-                      // onClick={() => openDetails(p)}
-                      compact
-                    />
+                    <tr key={p.id}>
+                      <td className="product-info">
+                        <img
+                          src={`/uploads/${p.image || "defaultpropertyimage.png"}`}
+                          alt={p.title}
+                        />
+                        <span>{p.title}</span>
+                      </td>
+                      <td>{p.address}</td>
+                      <td className="ma-price">₹{p.price}</td>
+                      <td>
+                        <span
+                          className={`status ${p.status === "available"
+                              ? "published"
+                              : p.status === "reserved"
+                                ? "low-stock"
+                                : "out-of-stock"
+                            }`}
+                        >
+                          {p.status}
+                        </span>
+                      </td>
+                      <td>
+                        {p.createdAt
+                          ? new Date(p.createdAt).toLocaleDateString()
+                          : "-"}
+                      </td>
+                      <td className="actions">
+                        <IoPencil onClick={(e) => onEdit(e, p)} />
+                        <MdDeleteForever
+                          onClick={(e) => handleDeleteClick(e, p)}
+                        />
+                      </td>
+                    </tr>
                   ))
                 )}
-              </div>
+              </tbody>
+            </table>
 
-              {/* Desktop Table */}
-              <table>
-                <thead>
-                  <tr>
-                    <th>Property</th>
-                    <th>Address</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                    <th>Added</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="ma-empty">No properties found</td>
-                    </tr>
-                  ) : (
-                    paginated.map((p) => (
-                      // <tr key={p.id} onClick={() => openDetails(p)}>
-                      <tr key={p.id}>
-                        <td className="product-info">
-                          <img src={`/uploads/${p.image || "defaultpropertyimage.png"}`} alt={p.title} />
-                          <span>{p.title}</span>
-                        </td>
-                        <td>{p.address}</td>
-                        <td className="ma-price">₹{p.price}</td>
-                        <td>
-                          <span className={`status ${p.status === "available" ? "published" : p.status === "reserved" ? "low-stock" : "out-of-stock"}`}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "-"}</td>
-                        <td className="actions">
-                          <IoPencil onClick={(e) => onEdit(e, p)} />
-                          {/* <IoIosEye onClick={(e) => { e.stopPropagation(); openDetails(p); }} /> */}
-                          <MdDeleteForever onClick={(e) => handleDeleteClick(e, p)} />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-
-              {/* Pagination */}
-              <div className="table-footer-pagination">
-                <span>
-                  Showing {startIndex + 1}–{Math.min(startIndex + PAGE_SIZE, filtered.length)} of {filtered.length}
-                </span>
-                <ul className="pagination">
-                  <li onClick={() => changePage(currentPage - 1)}>
-                    <HiOutlineArrowLeft />
+            {/* Pagination */}
+            <div className="table-footer-pagination">
+              <span>
+                Showing {startIndex + 1}–
+                {Math.min(startIndex + PAGE_SIZE, filtered.length)} of{" "}
+                {filtered.length}
+              </span>
+              <ul className="pagination">
+                <li onClick={() => changePage(currentPage - 1)}>
+                  <HiOutlineArrowLeft />
+                </li>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <li
+                    key={i}
+                    className={currentPage === i + 1 ? "active" : ""}
+                    onClick={() => changePage(i + 1)}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </li>
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <li
-                      key={i}
-                      className={currentPage === i + 1 ? "active" : ""}
-                      onClick={() => changePage(i + 1)}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </li>
-                  ))}
-                  <li onClick={() => changePage(currentPage + 1)}>
-                    <HiOutlineArrowRight />
-                  </li>
-                </ul>
-              </div>
-            </>
-          )}
+                ))}
+                <li onClick={() => changePage(currentPage + 1)}>
+                  <HiOutlineArrowRight />
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <ToastContainer theme="colored" autoClose={3000} hideProgressBar />
