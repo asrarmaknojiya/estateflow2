@@ -16,7 +16,7 @@ function MyProfile() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const authUser = JSON.parse(localStorage.getItem("authUser"));
-  const user = state?.admin || authUser;
+  const user = state?.client || authUser;
 
   const ROLE_MAP = {
     1: "Admin",
