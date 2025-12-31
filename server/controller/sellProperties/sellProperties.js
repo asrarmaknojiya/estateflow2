@@ -61,18 +61,16 @@ const getSellPropertyById = (req, res) => {
 
 // 🌱 add sell property
 const addSellProperty = (req, res) => {
-  const { property_id, buyer_id, assigned_by, amount, details } = req.body;
+  const { property_id, buyer_id, assigned_by, amount, details, assigned_at } = req.body;
 
   if (!property_id || !buyer_id || !amount) {
-    return res.status(400).json({
-      error: "required fields missing",
-    });
+    return res.status(400).json({ error: "required fields missing" });
   }
 
   const q = `
     INSERT INTO sell_properties
-      (property_id, buyer_id, assigned_by, amount, details)
-    VALUES (?, ?, ?, ?, ?)
+    (property_id, buyer_id, assigned_by, amount, details, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   connection.query(
@@ -83,20 +81,17 @@ const addSellProperty = (req, res) => {
       assigned_by || null,
       amount,
       details || null,
+      assigned_at || new Date(),
     ],
     (err, result) => {
       if (err)
-        return res
-          .status(500)
-          .json({ error: "database error", details: err });
+        return res.status(500).json({ error: "database error", details: err });
 
-      return res.status(201).json({
-        message: "sell property created",
-        insertId: result.insertId,
-      });
+      res.status(201).json({ message: "sell property created" });
     }
   );
 };
+
 
 // ✨ update sell property
 const updateSellProperty = (req, res) => {
