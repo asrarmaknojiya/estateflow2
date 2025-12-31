@@ -25,6 +25,7 @@ import TrashClients from "../../pages/admin/trash/TrashClient";
 import SellList from "../../pages/admin/card/SellList";
 import BuyList from "../../pages/admin/card/BuyList";
 import AddSellBuy from "../../pages/admin/userDashboard/Add_sell_Buy";
+import PropertyDetail from "../../pages/admin/properties/PropertyDetail";
 
 
 const DashboardRoute = () => {
@@ -42,6 +43,7 @@ const DashboardRoute = () => {
         <Route path="/admin/properties" element={<Properties />} />
         <Route path="/admin/addproperty" element={<AddProperty />} />
         <Route path="/admin/properties/edit/:id" element={<EditProperty />} />
+        <Route path="/admin/property/:id" element={<PropertyDetail/>} />
         <Route path="/admin/category" element={<Category />} />
         <Route path="/admin/orders" element={<Order />} />
         <Route path="/admin/coupon" element={<Coupon />} />

@@ -147,9 +147,8 @@ const Properties = () => {
                 {STATUS_OPTIONS.map((option) => (
                   <div
                     key={option.value}
-                    className={`dropdown-item ${
-                      selectedStatus === option.value ? "active" : ""
-                    }`}
+                    className={`dropdown-item ${selectedStatus === option.value ? "active" : ""
+                      }`}
                     onClick={() => {
                       setSelectedStatus(option.value);
                       setIsDropdownOpen(false);
@@ -193,6 +192,7 @@ const Properties = () => {
                     avatar={p.image ? `/uploads/${p.image}` : null}
                     title={p.title}
                     meta={p.address}
+                    onClick={() => navigate(`/admin/property/${p.id}`, { state: { item: p } })}
                     compact
                   />
                 ))
@@ -232,13 +232,12 @@ const Properties = () => {
                       <td className="ma-price">₹{p.price}</td>
                       <td>
                         <span
-                          className={`status ${
-                            p.status === "available"
+                          className={`status ${p.status === "available"
                               ? "published"
                               : p.status === "reserved"
-                              ? "low-stock"
-                              : "out-of-stock"
-                          }`}
+                                ? "low-stock"
+                                : "out-of-stock"
+                            }`}
                         >
                           {p.status}
                         </span>

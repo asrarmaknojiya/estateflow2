@@ -3,14 +3,14 @@
 ================================ */
 .profile-container {
   width: 100%;
+  padding-bottom: 80px; /* Extra space for mobile sticky bar */
 }
 
 .profile-wrapper {
   max-width: 1100px;
   margin: 0 auto;
-   padding-left: 16px;
+  padding-left: 16px;
   padding-right: 16px;
-  padding-bottom:0px; /* space for mobile sticky bar */
 }
 
 /* ===============================
@@ -20,7 +20,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 22px 0;
+  padding: 24px 0 20px;
   border-bottom: 1px solid var(--primary-border-color);
 }
 
@@ -29,40 +29,44 @@
   font-weight: 600;
   font-family: var(--info-font);
   margin: 0;
+  color: var(--black-color);
 }
 
 /* Desktop action buttons */
 .profile-actions-desktop {
   display: flex;
-  gap: 12px;
+  gap: 14px;
 }
 
 .profile-actions-desktop button {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 15px;
 }
 
 /* ===============================
-   BASIC PROFILE INFO
+   BASIC PROFILE / PROPERTY INFO BLOCK
 ================================ */
 .profile-basic-block {
   display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 26px 0;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 28px 0;
   border-bottom: 1px solid var(--primary-border-color);
 }
 
 .profile-avatar {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--primary-border-color);
   flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 16px; /* Rounded but not circle for properties */
+  overflow: hidden;
+  border: 3px solid var(--primary-border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .profile-avatar img {
@@ -72,49 +76,80 @@
 }
 
 .profile-basic-text h4 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 600;
+  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--black-color);
+  line-height: 1.3;
 }
 
 .profile-basic-text p {
-  margin: 4px 0 0;
-  font-size: 14px;
+  margin: 0 0 12px 0;
+  font-size: 16px;
   color: var(--light-gray-color);
+  line-height: 1.5;
 }
 
 /* Status badge */
 .profile-status {
   display: inline-block;
-  margin-top: 8px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 13px;
+  margin-top: 4px;
+  padding: 7px 16px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
+  text-transform: capitalize;
 }
 
-.profile-status.active {
+/* Status Colors - Unified */
+.profile-status.active,
+.profile-status.available,
+.profile-status.published {
   background: #e9faf7;
   color: #1a9882;
 }
 
-.profile-status.inactive {
+.profile-status.inactive,
+.profile-status.sold,
+.profile-status.out-of-stock {
   background: #feecee;
   color: #eb3d4d;
 }
 
+.profile-status.reserved,
+.profile-status.low-stock {
+  background: #fff0ea;
+  color: #f86624;
+}
+
+/* Price highlight for properties */
+.property-price-highlight {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-btn-bg);
+  margin: 8px 0;
+}
+
 /* ===============================
-   SECTIONS (NO FULL BORDER)
+   SECTIONS
 ================================ */
 .profile-section {
-  padding: 28px 0;
+  padding: 32px 0;
   border-bottom: 1px solid var(--primary-border-color);
+}
+
+.profile-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 20px;
 }
 
 .profile-section h6 {
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  color: var(--black-color);
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--primary-border-color);
 }
 
 /* ===============================
@@ -122,36 +157,52 @@
 ================================ */
 .info-row {
   display: flex;
-  flex-direction: column;   /* 👈 vertical */
+  flex-direction: column;
   gap: 6px;
-  padding: 14px 0;
+  padding: 16px 0;
+  border-bottom: 1px dashed var(--primary-border-color);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .info-row span {
-  font-size: clamp(13px, 1.1vw, 14px);
+  font-size: 14px;
   color: var(--light-black-color);
   font-weight: 500;
 }
 
 .info-row strong {
-  font-size: clamp(15px, 1.3vw, 16px);
+  font-size: 16px;
   font-weight: 600;
   color: var(--black-color);
   word-break: break-word;
 }
 
+/* Description row - full width text */
+.description-row p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--light-black-color);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 /* ===============================
-   ROLES
+   ROLES BADGES
 ================================ */
 .profile-roles-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .profile-role-badge {
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
   background: var(--primary-btn-bg);
   color: #fff;
   font-size: 14px;
@@ -163,57 +214,110 @@
 ================================ */
 .mobile-sticky-actions-fixed {
   display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--white-color);
+  padding: 16px;
+  border-top: 1px solid var(--primary-border-color);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 999;
+  gap: 14px;
+}
+
+.mobile-sticky-actions-fixed button {
+  flex: 1;
+  padding: 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* ===============================
-   TABLET
+   TABLET & MOBILE RESPONSIVE
 ================================ */
 @media (max-width: 1024px) {
   .profile-wrapper {
-    padding-left: 12px;
-    padding-right: 12px;
-    padding-bottom: 40px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .profile-basic-block {
+    gap: 20px;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-basic-text h4 {
+    font-size: 24px;
   }
 }
 
-/* ===============================
-   MOBILE
-================================ */
 @media (max-width: 480px) {
   /* Hide desktop actions */
   .profile-actions-desktop {
     display: none;
   }
 
-  /* Header spacing */
+  /* Adjust header */
   .profile-header-row {
-    padding-top: 14px;
-    padding-bottom: 14px;
+    padding: 16px 0 14px;
   }
 
-  /* Stack avatar + text nicely */
+  /* Stack layout for small screens */
   .profile-basic-block {
-    gap: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 24px 0;
   }
 
-  /* Sticky action bar */
-  .mobile-sticky-actions-fixed {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+  .profile-avatar {
     width: 100%;
-    background: #fff;
-    padding: 16px;
-    border-top: 1px solid var(--primary-border-color);
-    display: flex;
-    gap: 12px;
-    z-index: 999;
+    max-width: 280px;
+    height: 200px;
+    border-radius: 16px;
   }
 
-  .mobile-sticky-actions-fixed button {
-    flex: 1;
+  .profile-basic-text h4 {
+    font-size: 22px;
+  }
+
+  .property-price-highlight {
+    font-size: 28px;
+  }
+
+  /* Show mobile sticky bar */
+  .mobile-sticky-actions-fixed {
+    display: flex;
+  }
+
+  /* Section padding */
+  .profile-section {
+    padding: 28px 0;
+  }
+
+  .info-row {
     padding: 14px 0;
-    font-size: 15px;
-    border-radius: 10px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 360px) {
+  .profile-wrapper {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .mobile-sticky-actions-fixed {
+    padding: 12px;
   }
 }
