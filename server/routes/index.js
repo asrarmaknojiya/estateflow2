@@ -6,6 +6,7 @@ const role = require("../routes/users/role");
 const properties = require("../routes/properties/properties");
 const buyProperties = require("../routes/buyProperties/buyProperties");
 const sellProperties = require("../routes/sellProperties/sellProperties");
+const broker_assignments = require("../routes/broker/broker_assignments");
 
 const { globalLimiter } = require("../middleware/rateLimiter");
 
@@ -16,5 +17,6 @@ router.use("/", role);
 router.use("/", properties);
 router.use("/", buyProperties);
 router.use("/", sellProperties);
+router.use("/", broker_assignments);
 
 module.exports = router;

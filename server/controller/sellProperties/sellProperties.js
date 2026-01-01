@@ -59,38 +59,119 @@ const getSellPropertyById = (req, res) => {
   });
 };
 
-// 🌱 add sell property
+// 🌱 add sell property + auto reserve property
 const addSellProperty = (req, res) => {
-  const { property_id, buyer_id, assigned_by, amount, details, assigned_at } = req.body;
+  const {
+    property_id,
+    buyer_id,
+    assigned_by,
+    amount,
+    details,
+    assigned_at,
+  } = req.body;
 
   if (!property_id || !buyer_id || !amount) {
     return res.status(400).json({ error: "required fields missing" });
   }
 
-  const q = `
-    INSERT INTO sell_properties
-    (property_id, buyer_id, assigned_by, amount, details, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
+  // 1️⃣ get a single connection from pool
+  connection.getConnection((err, conn) => {
+    if (err)
+      return res.status(500).json({ error: "db connection failed" });
 
-  connection.query(
-    q,
-    [
-      property_id,
-      buyer_id,
-      assigned_by || null,
-      amount,
-      details || null,
-      assigned_at || new Date(),
-    ],
-    (err, result) => {
-      if (err)
-        return res.status(500).json({ error: "database error", details: err });
+    // 2️⃣ check property
+    const checkPropertyQ = `
+      SELECT status 
+      FROM properties 
+      WHERE id = ?
+    `;
 
-      res.status(201).json({ message: "sell property created" });
-    }
-  );
+    conn.query(checkPropertyQ, [property_id], (err, rows) => {
+      if (err) {
+        conn.release();
+        return res.status(500).json({ error: "database error" });
+      }
+
+      if (!rows.length) {
+        conn.release();
+        return res.status(404).json({ error: "property not found" });
+      }
+
+      if (rows[0].status === "reserved") {
+        conn.release();
+        return res.status(400).json({ error: "property already reserved" });
+      }
+
+      // 3️⃣ start transaction
+      conn.beginTransaction((err) => {
+        if (err) {
+          conn.release();
+          return res.status(500).json({ error: "transaction error" });
+        }
+
+        // 4️⃣ insert sell record
+        const insertSellQ = `
+          INSERT INTO sell_properties
+          (property_id, buyer_id, assigned_by, amount, details, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `;
+
+        conn.query(
+          insertSellQ,
+          [
+            property_id,
+            buyer_id,
+            assigned_by || null,
+            amount,
+            details || null,
+            assigned_at || new Date(),
+          ],
+          (err) => {
+            if (err) {
+              return conn.rollback(() => {
+                conn.release();
+                res.status(500).json({ error: "failed to create sell record" });
+              });
+            }
+
+            // 5️⃣ update property status
+            const updatePropertyQ = `
+              UPDATE properties 
+              SET status = 'reserved' 
+              WHERE id = ?
+            `;
+
+            conn.query(updatePropertyQ, [property_id], (err) => {
+              if (err) {
+                return conn.rollback(() => {
+                  conn.release();
+                  res.status(500).json({ error: "failed to update property" });
+                });
+              }
+
+              // 6️⃣ commit
+              conn.commit((err) => {
+                if (err) {
+                  return conn.rollback(() => {
+                    conn.release();
+                    res.status(500).json({ error: "commit failed" });
+                  });
+                }
+
+                conn.release();
+                res.status(201).json({
+                  message: "property sold & reserved successfully",
+                });
+              });
+            });
+          }
+        );
+      });
+    });
+  });
 };
+
+
 
 
 // ✨ update sell property

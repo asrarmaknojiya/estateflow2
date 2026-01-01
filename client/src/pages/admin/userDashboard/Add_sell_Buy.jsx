@@ -151,7 +151,7 @@ const AddSellBuy = () => {
                     <option value="">Select Property</option>
                     {properties.map((p) => (
                       <option key={p.id} value={p.id}>
-                        #{p.id} — {p.title || p.property_name}
+                        {p.title || p.property_name}
                       </option>
                     ))}
                   </select>
