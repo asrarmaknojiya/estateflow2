@@ -7,6 +7,7 @@ const properties = require("../routes/properties/properties");
 const buyProperties = require("../routes/buyProperties/buyProperties");
 const sellProperties = require("../routes/sellProperties/sellProperties");
 const broker_assignments = require("../routes/broker/broker_assignments");
+const inventory_entries = require("../routes/inventory/inventoryEntries");
 
 const { globalLimiter } = require("../middleware/rateLimiter");
 
@@ -18,5 +19,6 @@ router.use("/", properties);
 router.use("/", buyProperties);
 router.use("/", sellProperties);
 router.use("/", broker_assignments);
+router.use("/", inventory_entries);
 
 module.exports = router;
